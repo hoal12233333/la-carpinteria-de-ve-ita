@@ -1,0 +1,837 @@
+#!/usr/bin/env python3
+html = r'''<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>La Carpintería de Veñita</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<style>
+:root{
+  --ink:#1a1208;--wood-dark:#3a1e0a;--wood-mid:#6b3a1f;--wood-light:#a0602e;
+  --amber:#c87d3a;--sand:#e8c9a0;--cream:#f5ede0;--paper:#faf6ef;
+  --green:#2d5a3d;--green-lt:#3d7a52;--red-err:#8b2c2c;--blue-formula:#1e3a5f;
+  --rule:rgba(58,30,10,0.15);--rule-heavy:rgba(58,30,10,0.3);
+  --dev:#0a1a0f;--dev-border:rgba(0,200,80,0.3);--dev-accent:#00c850;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:var(--wood-dark);background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.015) 3px,rgba(255,255,255,0.015) 4px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,0.01) 60px,rgba(255,255,255,0.01) 61px);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px;}
+
+/* ── MASTHEAD ── */
+.masthead{width:100%;background:var(--ink);border-bottom:2px solid var(--amber);display:flex;align-items:center;justify-content:space-between;padding:0 28px;min-height:60px;flex-wrap:wrap;gap:6px;}
+.masthead-left{display:flex;align-items:center;gap:14px;}
+.logo-mark{width:34px;height:34px;background:var(--amber);display:flex;align-items:center;justify-content:center;border-radius:2px;font-size:17px;flex-shrink:0;}
+.masthead-sup{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--amber);opacity:0.7;}
+.masthead-name{font-family:'Libre Baskerville',serif;font-size:17px;color:var(--cream);letter-spacing:0.3px;line-height:1.1;}
+.masthead-name em{color:var(--amber);font-style:italic;}
+.masthead-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.hud-pill{display:flex;align-items:center;gap:5px;height:30px;padding:0 11px;border:1px solid rgba(200,125,58,0.3);border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--sand);}
+.hud-pill .val{font-weight:700;color:var(--amber);min-width:18px;text-align:right;}
+.hud-pill .ti{font-size:13px;color:rgba(200,125,58,0.6);}
+.dev-badge{display:none;align-items:center;gap:5px;height:30px;padding:0 10px;border:1px solid var(--dev-accent);border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--dev-accent);cursor:pointer;background:rgba(0,200,80,0.06);}
+.dev-badge.active{display:flex;}
+
+/* ── PROGRESS ── */
+.progress-bar{width:100%;max-width:1020px;display:flex;align-items:center;gap:10px;margin:0 auto 16px;padding:10px 28px 0;}
+.prog-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(232,201,160,0.45);white-space:nowrap;}
+.prog-track{flex:1;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--amber);border-radius:2px;transition:width 0.6s cubic-bezier(.4,0,.2,1);}
+.prog-level{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:var(--amber);}
+
+/* ── GRID ── */
+.game-wrap{width:100%;max-width:1020px;padding:0 28px;display:grid;grid-template-columns:1fr 290px;gap:12px;margin:0 auto;}
+.panel{background:var(--paper);border:1px solid var(--rule-heavy);border-radius:2px;overflow:hidden;}
+.panel-head{padding:9px 15px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:7px;background:rgba(58,30,10,0.04);}
+.panel-head-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--wood-mid);}
+.panel-head .ti{font-size:13px;color:var(--wood-light);}
+.panel-body{padding:14px;}
+
+/* ── ORDER ── */
+.client-row{display:flex;align-items:center;gap:11px;margin-bottom:10px;}
+.client-avatar{width:36px;height:36px;border-radius:50%;background:var(--wood-mid);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--sand);flex-shrink:0;border:2px solid var(--sand);font-family:'Libre Baskerville',serif;}
+.client-name{font-family:'Libre Baskerville',serif;font-size:14px;color:var(--ink);font-weight:700;}
+.client-tag{font-size:11px;color:var(--wood-light);}
+.order-text{font-size:13px;color:var(--wood-dark);line-height:1.6;padding:9px 11px;background:rgba(168,96,46,0.06);border-left:3px solid var(--amber);border-radius:0 2px 2px 0;margin-bottom:9px;}
+.dimension-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.dim-chip{font-family:'Barlow Condensed',sans-serif;font-size:11px;padding:3px 9px;background:var(--cream);border:1px solid var(--rule-heavy);border-radius:2px;color:var(--wood-dark);}
+
+/* ── CANVAS ── */
+.furniture-canvas{width:100%;height:190px;display:block;background:var(--cream);}
+
+/* ── CHALLENGE ── */
+.challenge-panel{background:var(--ink);border:1px solid rgba(200,125,58,0.3);}
+.challenge-panel .panel-head{background:rgba(200,125,58,0.08);border-bottom-color:rgba(200,125,58,0.2);}
+.challenge-panel .panel-head-label{color:var(--amber);}
+.challenge-panel .panel-head .ti{color:var(--amber);}
+.challenge-body{padding:18px;display:flex;gap:20px;align-items:flex-start;}
+.challenge-q{flex:1;color:rgba(245,232,200,0.9);font-size:15px;line-height:1.75;}
+.challenge-q strong{color:var(--sand);font-weight:600;}
+.challenge-title-head{font-family:'Libre Baskerville',serif;font-size:16px;color:var(--cream);margin-bottom:7px;}
+.answer-zone{display:flex;flex-direction:column;gap:7px;min-width:170px;}
+.unit-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(200,125,58,0.7);text-align:center;}
+.answer-input{font-family:'Barlow Condensed',sans-serif;font-size:32px;width:100%;padding:10px 12px;border:1.5px solid rgba(200,125,58,0.4);background:rgba(255,255,255,0.05);color:var(--amber);text-align:center;outline:none;letter-spacing:2px;border-radius:2px;transition:border-color 0.2s;-moz-appearance:textfield;}
+.answer-input::-webkit-inner-spin-button,.answer-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.answer-input:focus{border-color:var(--amber);}
+.btn-verify{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;border:none;background:var(--amber);color:var(--ink);cursor:pointer;border-radius:2px;transition:background 0.15s,transform 0.1s;touch-action:manipulation;}
+.btn-verify:hover{background:#d98a42;}
+.btn-verify:active{transform:scale(0.97);}
+.feedback{font-size:12px;padding:7px 11px;border-radius:2px;text-align:center;opacity:0;transition:opacity 0.2s;font-weight:500;line-height:1.4;}
+.feedback.ok{background:rgba(45,90,61,0.3);border:1px solid var(--green-lt);color:#80d0a0;opacity:1;}
+.feedback.err{background:rgba(139,44,44,0.25);border:1px solid rgba(200,80,80,0.5);color:#ffb0a8;opacity:1;}
+
+/* ── RIGHT COL ── */
+.right-col{display:flex;flex-direction:column;gap:12px;grid-row:1/3;}
+.tools-panel{background:var(--ink);border:1px solid rgba(200,125,58,0.25);border-radius:2px;overflow:hidden;}
+.tools-panel .panel-head{background:rgba(200,125,58,0.06);border-bottom:1px solid rgba(200,125,58,0.2);}
+.tools-panel .panel-head-label{color:var(--amber);}
+.tools-body{padding:9px;display:flex;flex-direction:column;gap:4px;}
+.tool-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:2px;padding:8px 10px;color:var(--sand);font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 0.15s,border-color 0.15s;text-align:left;width:100%;touch-action:manipulation;}
+.tool-btn .ti{font-size:15px;flex-shrink:0;color:var(--amber);}
+.tool-btn .t-lock{color:rgba(200,125,58,0.3);margin-left:auto;font-size:11px;}
+.tool-btn:hover:not(.locked){background:rgba(200,125,58,0.1);border-color:rgba(200,125,58,0.3);}
+.tool-btn.locked{opacity:0.45;}
+.tool-status{margin:5px 9px 0;padding:7px 9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:2px;font-size:11px;color:rgba(232,201,160,0.65);line-height:1.5;}
+.tool-status b{color:var(--amber);}
+.formulas-wrap{padding:7px 9px 9px;border-top:1px solid rgba(200,125,58,0.1);margin-top:5px;}
+.formulas-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(200,125,58,0.5);margin-bottom:5px;}
+.formula-tag{display:inline-block;background:rgba(30,58,95,0.6);border:1px solid rgba(46,100,160,0.4);color:#a8d4ff;border-radius:2px;padding:3px 7px;font-size:11px;font-family:'Barlow Condensed',sans-serif;margin:2px 2px 0 0;}
+
+/* ── SHOP ── */
+.shop-panel{background:#160e05;border:1px solid rgba(200,125,58,0.2);border-radius:2px;overflow:hidden;}
+.shop-panel .panel-head{background:rgba(200,125,58,0.05);border-bottom:1px solid rgba(200,125,58,0.15);}
+.shop-panel .panel-head-label{color:rgba(200,125,58,0.8);}
+.shop-body{padding:9px 11px 11px;}
+.stars-balance{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(232,201,160,0.55);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;}
+.stars-balance .val{font-size:17px;font-weight:700;color:var(--amber);}
+.shop-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);gap:6px;}
+.shop-row:last-child{border-bottom:none;}
+.shop-name{font-size:12px;color:var(--sand);display:flex;align-items:center;gap:5px;}
+.shop-name .ti{font-size:13px;color:rgba(200,125,58,0.7);}
+.shop-actions{display:flex;align-items:center;gap:5px;}
+.shop-price{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(200,125,58,0.7);}
+.buy-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border:1px solid var(--amber);background:transparent;color:var(--amber);border-radius:2px;cursor:pointer;transition:0.15s;touch-action:manipulation;}
+.buy-btn:hover{background:var(--amber);color:var(--ink);}
+.buy-btn.owned{background:rgba(45,90,61,0.3);border-color:var(--green-lt);color:#80d0a0;cursor:default;font-size:10px;}
+.buy-btn.owned:hover{background:rgba(45,90,61,0.3);color:#80d0a0;}
+
+/* ── TOOL OVERLAYS ── */
+.tool-overlay{position:fixed;inset:0;background:rgba(10,6,2,0.88);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
+.tool-overlay.visible{display:flex;}
+.tool-window{background:var(--paper);border:1px solid var(--rule-heavy);border-top:3px solid var(--amber);border-radius:2px;width:360px;max-width:100%;max-height:88vh;overflow-y:auto;animation:slideUp 0.18s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.tool-window-head{padding:11px 15px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--paper);z-index:1;}
+.tool-window-title{font-family:'Libre Baskerville',serif;font-size:15px;color:var(--ink);font-weight:700;}
+.close-btn{background:none;border:none;cursor:pointer;font-size:19px;color:var(--wood-mid);padding:4px;line-height:1;touch-action:manipulation;}
+.close-btn:hover{color:var(--ink);}
+.tool-window-body{padding:15px;}
+
+/* ── CALC ── */
+.calc-display{background:var(--ink);color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-size:26px;text-align:right;padding:9px 13px;border-radius:2px;margin-bottom:9px;letter-spacing:1px;min-height:50px;word-break:break-all;line-height:1.2;}
+.calc-display .calc-expr{font-size:11px;color:rgba(200,125,58,0.5);display:block;margin-bottom:2px;min-height:14px;}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.calc-btn{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;padding:13px 4px;border:1px solid var(--rule-heavy);background:var(--cream);color:var(--ink);border-radius:2px;cursor:pointer;transition:background 0.1s,transform 0.08s;text-align:center;touch-action:manipulation;}
+.calc-btn:hover{background:var(--sand);}
+.calc-btn:active{transform:scale(0.93);}
+.calc-btn.op{background:rgba(168,96,46,0.12);color:var(--wood-mid);}
+.calc-btn.op:hover{background:rgba(168,96,46,0.2);}
+.calc-btn.eq{background:var(--amber);color:var(--ink);border-color:var(--amber);}
+.calc-btn.eq:hover{background:#d98a42;}
+.calc-btn.clr{background:rgba(139,44,44,0.12);color:var(--red-err);}
+.calc-btn.sqrt{background:rgba(30,58,95,0.1);color:var(--blue-formula);}
+.calc-btn.wide{grid-column:span 2;}
+
+/* ── RULER / SAW / ANGLE ── */
+.ruler-section{margin-bottom:13px;}
+.ruler-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--wood-light);margin-bottom:5px;}
+.ruler-value{font-family:'Libre Baskerville',serif;font-size:21px;color:var(--ink);border-bottom:1px solid var(--rule-heavy);padding-bottom:7px;}
+.ruler-value span{font-size:13px;color:var(--wood-light);margin-left:4px;}
+.ruler-formula{margin-top:11px;padding:9px;background:rgba(30,58,95,0.06);border:1px solid rgba(30,58,95,0.15);border-radius:2px;font-size:13px;color:var(--blue-formula);font-family:'Barlow Condensed',sans-serif;}
+.ruler-formula .formula-main{font-size:15px;font-weight:600;margin-bottom:3px;}
+.saw-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--wood-light);margin-bottom:5px;}
+.saw-table{width:100%;border-collapse:collapse;font-size:13px;}
+.saw-table td{padding:5px 7px;border-bottom:1px solid var(--rule);color:var(--wood-dark);}
+.saw-table td:first-child{color:var(--wood-light);font-weight:500;width:50%;}
+.saw-table tr:last-child td{border-bottom:none;}
+.saw-cut-row{margin-top:11px;padding:9px;background:rgba(168,96,46,0.06);border-left:3px solid var(--amber);border-radius:0 2px 2px 0;font-size:13px;color:var(--wood-dark);}
+.angle-formula-box{padding:11px 13px;background:rgba(30,58,95,0.06);border:1px solid rgba(30,58,95,0.2);border-radius:2px;margin-bottom:9px;}
+.af-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--blue-formula);margin-bottom:5px;opacity:0.7;}
+.af-formula{font-family:'Libre Baskerville',serif;font-size:17px;color:var(--ink);}
+.af-desc{font-size:12px;color:var(--wood-light);margin-top:3px;}
+.angle-calc-row{display:flex;align-items:center;gap:5px;margin-top:9px;flex-wrap:wrap;}
+.angle-calc-row input{width:60px;padding:6px 7px;font-family:'Barlow Condensed',sans-serif;font-size:16px;border:1px solid var(--rule-heavy);border-radius:2px;text-align:center;color:var(--ink);background:var(--cream);}
+.angle-calc-row label{font-size:12px;color:var(--wood-mid);}
+.af-btn{padding:6px 13px;background:var(--blue-formula);color:#fff;border:none;border-radius:2px;font-size:12px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;font-weight:600;touch-action:manipulation;}
+.angle-result{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--blue-formula);margin-top:7px;min-height:18px;font-weight:600;letter-spacing:0.5px;}
+
+/* ── FULLSCREEN OVERLAYS ── */
+.fullscreen-overlay{position:fixed;inset:0;background:rgba(26,18,8,0.95);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
+.intro-card{background:var(--paper);border:1px solid var(--rule-heavy);border-top:4px solid var(--amber);border-radius:2px;width:440px;max-width:100%;padding:36px 32px 32px;text-align:center;}
+.intro-icon{width:52px;height:52px;background:var(--amber);border-radius:2px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:24px;}
+.intro-card h1{font-family:'Libre Baskerville',serif;font-size:24px;color:var(--ink);margin-bottom:5px;}
+.intro-card h1 em{color:var(--wood-mid);font-style:italic;}
+.intro-sup{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--amber);margin-bottom:18px;display:block;}
+.intro-card p{font-size:13px;color:var(--wood-dark);line-height:1.7;margin-bottom:24px;}
+.intro-card p strong{color:var(--ink);}
+.btn-start{font-family:'Libre Baskerville',serif;font-size:16px;font-style:italic;font-weight:700;padding:12px 34px;background:var(--wood-dark);color:var(--amber);border:none;border-radius:2px;cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:background 0.15s;touch-action:manipulation;}
+.btn-start:hover{background:var(--wood-mid);}
+.btn-start:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink);}
+
+/* ── GAME OVER ── */
+#gameOverScreen{display:none;}
+.gameover-card{background:#0d0604;border:1px solid rgba(200,80,80,0.4);border-top:4px solid #c0291e;border-radius:2px;width:440px;max-width:100%;padding:36px;text-align:center;}
+.gameover-card h1{font-family:'Libre Baskerville',serif;font-size:26px;color:#e8c9a0;margin-bottom:7px;}
+.gameover-card h1 em{color:#e05050;font-style:italic;}
+.gameover-stat{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(232,201,160,0.5);margin-bottom:22px;display:block;}
+.gameover-score{font-family:'Libre Baskerville',serif;font-size:46px;color:#c87d3a;margin-bottom:3px;}
+.gameover-label{font-size:11px;color:rgba(232,201,160,0.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;margin-bottom:24px;}
+.btn-retry{font-family:'Libre Baskerville',serif;font-size:15px;font-style:italic;font-weight:700;padding:11px 28px;background:#c0291e;color:#fff;border:none;border-radius:2px;cursor:pointer;box-shadow:0 3px 0 #7a1a10;margin-right:8px;touch-action:manipulation;}
+.btn-retry:hover{background:#d03020;}
+.btn-continue-go{font-family:'Libre Baskerville',serif;font-size:15px;font-style:italic;font-weight:700;padding:11px 28px;background:var(--wood-dark);color:var(--amber);border:none;border-radius:2px;cursor:pointer;box-shadow:0 3px 0 var(--ink);touch-action:manipulation;}
+
+/* ── ANIMATIONS ── */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  15%{transform:translateX(-9px) rotate(-0.6deg);}
+  30%{transform:translateX(8px) rotate(0.5deg);}
+  45%{transform:translateX(-7px) rotate(-0.4deg);}
+  60%{transform:translateX(5px);}
+  75%{transform:translateX(-3px);}
+  90%{transform:translateX(2px);}
+}
+@keyframes successPop{
+  0%{transform:scale(1);}
+  35%{transform:scale(1.03);}
+  65%{transform:scale(0.99);}
+  100%{transform:scale(1);}
+}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1);}
+  25%{transform:scale(1.35);}
+  50%{transform:scale(0.9);}
+  75%{transform:scale(1.2);}
+}
+@keyframes flashRed{
+  0%,100%{background:var(--ink);}
+  40%{background:rgba(160,35,22,0.4);}
+}
+@keyframes flashGreen{
+  0%,100%{background:var(--ink);}
+  40%{background:rgba(40,120,60,0.25);}
+}
+.anim-shake{animation:shake 0.45s cubic-bezier(.36,.07,.19,.97) both;}
+.anim-pop{animation:successPop 0.35s ease both;}
+.anim-flash-red{animation:flashRed 0.5s ease both;}
+.anim-flash-green{animation:flashGreen 0.5s ease both;}
+.anim-heartbeat .val{animation:heartbeat 0.45s ease both;}
+
+/* ── SCORE FLOAT ── */
+.score-float{position:fixed;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#80d0a0;pointer-events:none;z-index:999;text-shadow:0 2px 8px rgba(0,0,0,0.7);}
+
+/* ── DEV ── */
+body.dev-mode{border-top:3px solid var(--dev-accent);}
+.dev-panel{display:none;width:100%;background:var(--dev);border-bottom:1px solid var(--dev-border);}
+.dev-panel.visible{display:block;}
+.dev-tab-bar{display:flex;border-bottom:1px solid var(--dev-border);overflow-x:auto;}
+.dev-tab{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:7px 15px;color:rgba(0,200,80,0.5);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.dev-tab.active{color:var(--dev-accent);border-bottom-color:var(--dev-accent);}
+.dev-section{display:none;padding:12px 18px;}
+.dev-section.active{display:block;}
+.dev-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(0,200,80,0.5);margin-bottom:5px;display:block;}
+.dev-input{background:rgba(0,200,80,0.05);border:1px solid var(--dev-border);border-radius:2px;padding:6px 9px;color:var(--dev-accent);font-family:'Barlow Condensed',sans-serif;font-size:13px;width:100%;outline:none;}
+.dev-input:focus{border-color:var(--dev-accent);}
+.dev-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;border:1px solid var(--dev-accent);background:transparent;color:var(--dev-accent);border-radius:2px;cursor:pointer;transition:0.15s;}
+.dev-btn:hover{background:var(--dev-accent);color:var(--dev);}
+.dev-btn.danger{border-color:#e05050;color:#e05050;}
+.dev-btn.danger:hover{background:#e05050;color:#fff;}
+.dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.dev-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.dev-row label{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(0,200,80,0.6);min-width:80px;}
+.dev-textarea{resize:vertical;min-height:70px;font-size:12px;}
+.dev-msg{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--dev-accent);margin-top:7px;min-height:16px;}
+.dev-table{width:100%;border-collapse:collapse;font-size:12px;font-family:'Barlow Condensed',sans-serif;}
+.dev-table th{text-align:left;padding:5px 7px;border-bottom:1px solid var(--dev-border);color:rgba(0,200,80,0.5);letter-spacing:2px;font-size:9px;text-transform:uppercase;}
+.dev-table td{padding:4px 7px;border-bottom:1px solid rgba(0,200,80,0.08);color:rgba(0,200,80,0.8);}
+.dev-edit-btn{padding:2px 7px;border:1px solid var(--dev-border);background:none;color:var(--dev-accent);border-radius:2px;cursor:pointer;font-size:9px;font-family:'Barlow Condensed',sans-serif;}
+.dev-select{background:rgba(0,200,80,0.05);border:1px solid var(--dev-border);border-radius:2px;padding:6px 9px;color:var(--dev-accent);font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;}
+.dev-code{background:rgba(0,0,0,0.5);border:1px solid var(--dev-border);border-radius:2px;padding:9px;color:var(--dev-accent);font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow-y:auto;margin-top:7px;}
+#winScreen{display:none;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:720px){
+  .masthead{padding:8px 14px;gap:6px;}
+  .masthead-sup{display:none;}
+  .masthead-name{font-size:14px;}
+  .logo-mark{width:30px;height:30px;font-size:15px;}
+  .hud-pill{height:27px;padding:0 9px;font-size:12px;}
+  .progress-bar{padding:9px 14px 0;gap:7px;}
+  .prog-label{display:none;}
+  .game-wrap{grid-template-columns:1fr;padding:0 12px;gap:10px;}
+  .right-col{grid-row:auto;order:3;}
+  .challenge-panel{order:2;}
+  /* Tools horizontal strip on mobile */
+  .tools-body{flex-direction:row;overflow-x:auto;padding:8px 7px;gap:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .tools-body::-webkit-scrollbar{display:none;}
+  .tool-btn{flex-direction:column;min-width:68px;flex-shrink:0;padding:8px 5px;gap:4px;font-size:10px;align-items:center;text-align:center;}
+  .tool-btn span{font-size:10px;line-height:1.2;text-align:center;}
+  .tool-btn .t-lock{display:none;}
+  .tool-btn .ti{font-size:19px;}
+  .tool-status{display:none;}
+  .formulas-wrap{padding:6px 8px 8px;}
+  .challenge-body{padding:14px;flex-direction:column;gap:12px;}
+  .answer-zone{min-width:unset;width:100%;}
+  .answer-input{font-size:38px;padding:14px;}
+  .btn-verify{padding:14px;font-size:14px;}
+  .challenge-title-head{font-size:15px;}
+  .challenge-q{font-size:14px;}
+  .furniture-canvas{height:170px;}
+  .panel-body{padding:11px;}
+  .intro-card{padding:26px 20px 22px;}
+  .intro-card h1{font-size:21px;}
+  .gameover-card{padding:26px 20px;}
+  .gameover-score{font-size:40px;}
+  .tool-window{width:96vw;}
+  .dev-section{padding:9px 11px;overflow-x:auto;}
+  .dev-grid{grid-template-columns:1fr;}
+  .dev-tab{padding:6px 10px;font-size:9px;}
+  .calc-btn{padding:15px 4px;font-size:17px;}
+}
+@media(max-width:400px){
+  .masthead-name{font-size:12px;}
+  .answer-input{font-size:32px;}
+  .gameover-score{font-size:34px;}
+  .btn-retry,.btn-continue-go{font-size:13px;padding:10px 18px;}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="fullscreen-overlay" id="introScreen">
+  <div class="intro-card">
+    <div class="intro-icon">&#9998;</div>
+    <h1>La Carpintería de <em>Veñita</em></h1>
+    <span class="intro-sup">Taller de geometría &amp; madera</span>
+    <p>Ayudá a Veña a construir muebles usando <strong>matemáticas reales</strong>. Niveles infinitos y aleatorios. Comprá herramientas con estrellas. <strong>Cuidado:</strong> si perdés todas las vidas, el juego termina.</p>
+    <button class="btn-start" onclick="startGame()">Empezar a construir</button>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="fullscreen-overlay" id="gameOverScreen">
+  <div class="gameover-card">
+    <h1>Juego <em>terminado</em></h1>
+    <span class="gameover-stat">Se acabaron las vidas</span>
+    <div class="gameover-score" id="goScore">0</div>
+    <div class="gameover-label">ESTRELLAS GANADAS</div>
+    <p style="font-size:13px;color:rgba(232,201,160,0.5);margin-bottom:24px;">Llegaste al encargo <strong id="goLevel" style="color:var(--amber);">1</strong>.</p>
+    <button class="btn-retry" onclick="hardRestart()">Empezar de cero</button>
+    <button class="btn-continue-go" onclick="continueAfterGameOver()">Continuar</button>
+  </div>
+</div>
+
+<!-- WIN -->
+<div class="fullscreen-overlay" id="winScreen">
+  <div class="intro-card">
+    <div class="intro-icon">&#9733;</div>
+    <h1><em>Maestría</em> lograda</h1>
+    <span class="intro-sup">La Carpintería de Veñita</span>
+    <p id="winMsg"></p>
+    <button class="btn-start" onclick="continueInfinite()">Seguir con más encargos</button>
+  </div>
+</div>
+
+<!-- TOOL OVERLAYS -->
+<div class="tool-overlay" id="overlayCalc">
+  <div class="tool-window">
+    <div class="tool-window-head"><div class="tool-window-title">Calculadora del taller</div><button class="close-btn" onclick="closeTool('calc')"><i class="ti ti-x"></i></button></div>
+    <div class="tool-window-body">
+      <div class="calc-display"><span class="calc-expr" id="calcExpr"></span><span id="calcDisplay">0</span></div>
+      <div class="calc-grid">
+        <button class="calc-btn clr wide" onclick="calcClear()">Limpiar</button>
+        <button class="calc-btn op" onclick="calcBack()"><i class="ti ti-backspace"></i></button>
+        <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+        <button class="calc-btn" onclick="calcInput('7')">7</button><button class="calc-btn" onclick="calcInput('8')">8</button><button class="calc-btn" onclick="calcInput('9')">9</button>
+        <button class="calc-btn op" onclick="calcInput('*')">×</button>
+        <button class="calc-btn" onclick="calcInput('4')">4</button><button class="calc-btn" onclick="calcInput('5')">5</button><button class="calc-btn" onclick="calcInput('6')">6</button>
+        <button class="calc-btn op" onclick="calcInput('-')">−</button>
+        <button class="calc-btn" onclick="calcInput('1')">1</button><button class="calc-btn" onclick="calcInput('2')">2</button><button class="calc-btn" onclick="calcInput('3')">3</button>
+        <button class="calc-btn op" onclick="calcInput('+')">+</button>
+        <button class="calc-btn sqrt" onclick="calcSqrt()">√</button>
+        <button class="calc-btn" onclick="calcInput('0')">0</button>
+        <button class="calc-btn" onclick="calcInput('.')">.</button>
+        <button class="calc-btn eq" onclick="calcEquals()">=</button>
+      </div>
+      <div style="margin-top:9px;font-size:11px;color:var(--wood-light);text-align:center;">Resultado → usalo en tu respuesta</div>
+    </div>
+  </div>
+</div>
+<div class="tool-overlay" id="overlayRuler">
+  <div class="tool-window"><div class="tool-window-head"><div class="tool-window-title">Regla de medición</div><button class="close-btn" onclick="closeTool('ruler')"><i class="ti ti-x"></i></button></div><div class="tool-window-body" id="rulerBody"></div></div>
+</div>
+<div class="tool-overlay" id="overlayAngle">
+  <div class="tool-window"><div class="tool-window-head"><div class="tool-window-title">Escuadra &amp; Pitágoras</div><button class="close-btn" onclick="closeTool('angle')"><i class="ti ti-x"></i></button></div><div class="tool-window-body" id="angleBody"></div></div>
+</div>
+<div class="tool-overlay" id="overlaySaw">
+  <div class="tool-window"><div class="tool-window-head"><div class="tool-window-title">Sierra de corte</div><button class="close-btn" onclick="closeTool('saw')"><i class="ti ti-x"></i></button></div><div class="tool-window-body" id="sawBody"></div></div>
+</div>
+
+<!-- DEV PANEL -->
+<div class="dev-panel" id="devPanel">
+  <div class="dev-tab-bar">
+    <button class="dev-tab active" onclick="devTab('state')">Estado</button>
+    <button class="dev-tab" onclick="devTab('levels')">Niveles</button>
+    <button class="dev-tab" onclick="devTab('edit')">Editar</button>
+    <button class="dev-tab" onclick="devTab('db')">SQL</button>
+    <button class="dev-tab" onclick="devTab('export')">Exportar</button>
+  </div>
+  <div class="dev-section active" id="devState">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;">
+      <div>
+        <span class="dev-label">Estado del juego</span>
+        <div class="dev-row"><label>Estrellas</label><input class="dev-input" id="devScore" style="width:80px;" type="number" oninput="devApplyState()"></div>
+        <div class="dev-row"><label>Vidas</label><input class="dev-input" id="devLives" style="width:80px;" type="number" min="0" max="99" oninput="devApplyState()"></div>
+        <div class="dev-row"><label>Índice nivel</label><input class="dev-input" id="devIdx" style="width:80px;" type="number" min="0" oninput="devApplyState()"></div>
+      </div>
+      <div>
+        <span class="dev-label">Herramientas</span>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="color:var(--dev-accent);font-size:12px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="devRuler" onchange="devApplyTools()"> Regla</label>
+          <label style="color:var(--dev-accent);font-size:12px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="devSaw" onchange="devApplyTools()"> Sierra</label>
+          <label style="color:var(--dev-accent);font-size:12px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="devAngle" onchange="devApplyTools()"> Escuadra</label>
+          <label style="color:var(--dev-accent);font-size:12px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="devCalc" onchange="devApplyTools()"> Calculadora</label>
+        </div>
+      </div>
+      <div>
+        <span class="dev-label">Acciones</span>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          <button class="dev-btn" onclick="devGiveStars(100)">+100 ★</button>
+          <button class="dev-btn" onclick="devGiveStars(500)">+500 ★</button>
+          <button class="dev-btn" onclick="devUnlockAll()">Desbloquear todo</button>
+          <button class="dev-btn" onclick="devNextLevel()">Sig. nivel</button>
+          <button class="dev-btn" onclick="devPrevLevel()">Ant. nivel</button>
+          <button class="dev-btn danger" onclick="devResetSave()">Borrar guardado</button>
+        </div>
+      </div>
+    </div>
+    <div class="dev-msg" id="devStateMsg"></div>
+  </div>
+  <div class="dev-section" id="devLevels">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+      <span class="dev-label" style="margin-bottom:0;">Niveles en sesión</span>
+      <button class="dev-btn" onclick="devAddLevel()">+ Nuevo</button>
+    </div>
+    <div style="overflow-x:auto;max-height:300px;overflow-y:auto;"><table class="dev-table" id="devLevelTable"></table></div>
+    <div class="dev-msg" id="devLevelsMsg"></div>
+  </div>
+  <div class="dev-section" id="devEdit">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+      <span class="dev-label" style="margin-bottom:0;">Nivel #</span>
+      <select class="dev-select" id="devEditSelect" onchange="devLoadEditForm()"></select>
+    </div>
+    <div class="dev-grid" id="devEditForm"></div>
+    <div style="display:flex;gap:7px;margin-top:11px;">
+      <button class="dev-btn" onclick="devSaveEdit()">Guardar</button>
+      <button class="dev-btn danger" onclick="devDeleteLevel()">Eliminar</button>
+    </div>
+    <div class="dev-msg" id="devEditMsg"></div>
+  </div>
+  <div class="dev-section" id="devDb">
+    <span class="dev-label">Consulta SQL directa</span>
+    <textarea class="dev-input dev-textarea" id="devSqlInput" placeholder="SELECT * FROM progress;"></textarea>
+    <div style="display:flex;gap:7px;margin-top:7px;">
+      <button class="dev-btn" onclick="devRunSql()">Ejecutar</button>
+      <button class="dev-btn" onclick="devResetDb()">Resetear DB</button>
+    </div>
+    <div class="dev-code" id="devSqlResult"></div>
+  </div>
+  <div class="dev-section" id="devExport">
+    <span class="dev-label">Exportar HTML con niveles actuales</span>
+    <p style="font-size:12px;color:rgba(0,200,80,0.5);margin-bottom:9px;">Descarga el juego con todos los cambios de esta sesión.</p>
+    <button class="dev-btn" onclick="devExportCode()">Descargar HTML</button>
+    <div class="dev-msg" id="devExportMsg"></div>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-left">
+    <div class="logo-mark">&#9998;</div>
+    <div>
+      <div class="masthead-sup">Taller artesanal · matemáticas</div>
+      <div class="masthead-name">La Carpintería de <em>Veñita</em></div>
+    </div>
+  </div>
+  <div class="masthead-right">
+    <div class="hud-pill" id="hudScore"><i class="ti ti-star"></i><span class="val" id="scoreDisplay">0</span></div>
+    <div class="hud-pill" id="hudLives"><i class="ti ti-heart"></i><span class="val" id="livesDisplay">3</span></div>
+    <div class="hud-pill"><i class="ti ti-clipboard-list"></i><span class="val" id="challengeNum">1/9</span></div>
+    <div class="dev-badge" id="devBadge" onclick="toggleDevPanel()"><i class="ti ti-terminal"></i> DEV</div>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <span class="prog-label">Progreso</span>
+  <div class="prog-track"><div class="prog-fill" id="progressFill" style="width:0%"></div></div>
+  <span class="prog-level" id="levelNum">Nivel 1</span>
+</div>
+
+<div class="game-wrap">
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="panel">
+      <div class="panel-head"><i class="ti ti-clipboard"></i><span class="panel-head-label">Encargo del cliente</span></div>
+      <div class="panel-body" id="orderCard"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><i class="ti ti-ruler-measure"></i><span class="panel-head-label">Vista del mueble</span></div>
+      <canvas id="furnitureCanvas" class="furniture-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="tools-panel">
+      <div class="panel-head"><i class="ti ti-tools"></i><span class="panel-head-label">Herramientas</span></div>
+      <div class="tools-body">
+        <button class="tool-btn locked" id="toolRuler" onclick="handleTool('ruler')"><i class="ti ti-ruler"></i><span>Regla</span><i class="ti ti-lock t-lock"></i></button>
+        <button class="tool-btn locked" id="toolSaw" onclick="handleTool('saw')"><i class="ti ti-cut"></i><span>Sierra</span><i class="ti ti-lock t-lock"></i></button>
+        <button class="tool-btn locked" id="toolAngle" onclick="handleTool('angle')"><i class="ti ti-angle"></i><span>Escuadra</span><i class="ti ti-lock t-lock"></i></button>
+        <button class="tool-btn locked" id="toolCalc" onclick="handleTool('calc')"><i class="ti ti-calculator"></i><span>Calc.</span><i class="ti ti-lock t-lock"></i></button>
+      </div>
+      <div class="tool-status" id="toolInfo"><b>Herramientas bloqueadas</b> — comprá en la tienda.</div>
+      <div class="formulas-wrap"><div class="formulas-label">Fórmulas</div><div id="formulasBox"></div></div>
+    </div>
+    <div class="shop-panel">
+      <div class="panel-head"><i class="ti ti-shopping-cart"></i><span class="panel-head-label">Tienda</span></div>
+      <div class="shop-body">
+        <div class="stars-balance"><span>Disponibles</span><span class="val" id="starBalance">0</span></div>
+        <div id="shopContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="challenge-panel panel" style="grid-column:1/2;">
+    <div class="panel-head"><i class="ti ti-hammer"></i><span class="panel-head-label" id="challengeLabel">Pregunta matemática</span></div>
+    <div class="challenge-body">
+      <div class="challenge-q">
+        <div class="challenge-title-head" id="challengeTitle">—</div>
+        <div id="challengeText"></div>
+      </div>
+      <div class="answer-zone" id="answerZone">
+        <div class="unit-label" id="unitLabel"></div>
+        <input class="answer-input" type="text" id="answerInput" placeholder="?" onkeydown="if(event.key==='Enter')checkAnswer()" autocomplete="off" inputmode="decimal">
+        <button class="btn-verify" onclick="checkAnswer()">Verificar</button>
+        <div class="feedback" id="feedback"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════ CHALLENGES ══════
+const BASE_CHALLENGES=[
+  {level:1,theme:"mesa",client:"Sofía",clientIcon:"S",order:"Necesito una mesita rectangular. ¿Cuánta madera usás para la tapa?",furniture:"table",dims:{w:6,h:4},title:"Área de la tapa",question:"La mesa mide <strong>6 dm de ancho</strong> y <strong>4 dm de alto</strong>. ¿Cuánto es el área total?",formulas:["Área = base × altura"],answer:24,unit:"dm²",tolerance:0,hint:"6 × 4 = 24",successMsg:"24 dm² perfectos."},
+  {level:2,theme:"marco",client:"Carlos",clientIcon:"C",order:"Un marco de fotos de 5 por 3 dm. ¿Cuánta madera para el borde?",furniture:"frame",dims:{w:5,h:3},title:"Perímetro del marco",question:"El marco mide <strong>5 dm</strong> de ancho y <strong>3 dm</strong> de alto. ¿Cuánto es el perímetro?",formulas:["P = 2 × (base + altura)"],answer:16,unit:"dm",tolerance:0,hint:"2 × (5 + 3) = 16",successMsg:"Perímetro 16 dm."},
+  {level:3,theme:"repisa triangular",client:"Mamá Rosa",clientIcon:"R",order:"Quiero una repisa triangular. Base 8 dm, altura 5 dm.",furniture:"triangle",dims:{w:8,h:5},title:"Área del triángulo",question:"Base <strong>8 dm</strong>, altura <strong>5 dm</strong>. ¿Cuánto es el área?",formulas:["Área = (base × altura) / 2"],answer:20,unit:"dm²",tolerance:0,hint:"(8 × 5) / 2 = 20",successMsg:"20 dm² — correcto."},
+  {level:4,theme:"silla",client:"Don Pedro",clientIcon:"P",order:"Una tabla de 12 dm cortada en 2 partes iguales.",furniture:"plank",dims:{w:12,h:2},title:"División en partes iguales",question:"Una tabla de <strong>12 dm</strong> cortada en <strong>2 partes iguales</strong>. ¿Cuánto mide cada parte?",formulas:["Parte = total ÷ n"],answer:6,unit:"dm",tolerance:0,hint:"12 ÷ 2 = 6",successMsg:"6 dm cada parte."},
+  {level:5,theme:"armario",client:"Tía Luisa",clientIcon:"L",order:"El plano del armario mide 3 cm. Escala 1 cm = 4 dm.",furniture:"wardrobe",dims:{w:3,scale:4},title:"Cálculo de escala",question:"En el plano mide <strong>3 cm</strong>. La escala es <strong>1 cm = 4 dm</strong>. ¿Cuánto mide el armario real?",formulas:["Medida real = plano × factor"],answer:12,unit:"dm",tolerance:0,hint:"3 × 4 = 12",successMsg:"12 dm reales."},
+  {level:6,theme:"repisas",client:"Beto",clientIcon:"B",order:"Una pared de 15 dm para 3 repisas del mismo tamaño.",furniture:"shelf3",dims:{w:15,n:3},title:"División de repisas",question:"<strong>15 dm</strong> divididos en <strong>3 repisas iguales</strong>. ¿Cuánto mide cada una?",formulas:["Repisa = total ÷ cantidad"],answer:5,unit:"dm",tolerance:0,hint:"15 ÷ 3 = 5",successMsg:"5 dm cada repisa."},
+  {level:7,theme:"viga diagonal",client:"Escuela",clientIcon:"E",order:"Cateto vertical 3 dm, horizontal 4 dm. ¿Cuánto mide la diagonal?",furniture:"diagonal",dims:{a:3,b:4},title:"Teorema de Pitágoras",question:"Cateto vertical: <strong>3 dm</strong>. Cateto horizontal: <strong>4 dm</strong>. ¿Cuánto mide la hipotenusa?",formulas:["c² = a² + b²","c = √(a² + b²)"],answer:5,unit:"dm",tolerance:0,hint:"√(9 + 16) = √25 = 5",successMsg:"5 dm — clásico 3-4-5."},
+  {level:8,theme:"asiento circular",client:"Café Sol",clientIcon:"☕",order:"Un asiento redondo con radio de 2 dm. Usá π ≈ 3.14",furniture:"circle",dims:{r:2},title:"Área del círculo",question:"Radio = <strong>2 dm</strong>, π ≈ 3.14. ¿Área? Redondeá al entero más cercano.",formulas:["Área = π × r²"],answer:13,unit:"dm²",tolerance:0.5,hint:"3.14 × 4 ≈ 12.56 ≈ 13",successMsg:"13 dm² aprox."},
+  {level:9,theme:"cerco del jardín",client:"Sra. Paz",clientIcon:"Z",order:"Tengo 20 dm de madera para un cerco cuadrado.",furniture:"garden",dims:{p:20},title:"Cuadrado óptimo",question:"Perímetro total: <strong>20 dm</strong>. El cerco es un cuadrado perfecto. ¿Cuánto mide cada lado?",formulas:["Lado = Perímetro ÷ 4"],answer:5,unit:"dm",tolerance:0,hint:"20 ÷ 4 = 5",successMsg:"5 dm por lado."}
+];
+
+const CLIENTS=["Ana","Bruno","Carla","Diego","Elena","Fede","Gloria","Hugo","Iris","Julián","Karen","Leo","Marta","Noel","Omar","Paula","Quique","Rosa","Santi","Tania"];
+const ICONS=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T"];
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+function generateChallenge(levelNum){
+  const diff=Math.min(Math.floor((levelNum-1)/3)+1,5);
+  const pool=diff<=1?['area_rect','perim_rect','division']:diff<=2?['area_rect','perim_rect','area_tri','division','scale']:diff<=3?['area_rect','perim_rect','area_tri','division','scale','pyth']:diff<=4?['area_rect','area_tri','division','scale','pyth','area_circle']:['area_rect','perim_rect','area_tri','division','scale','pyth','area_circle','perim_square'];
+  const type=pick(pool);
+  const ci=rnd(0,CLIENTS.length-1);
+  const client=CLIENTS[ci],icon=ICONS[ci];
+  let c={level:levelNum,client,clientIcon:icon,tolerance:0,formulas:[]};
+  if(type==='area_rect'){const w=rnd(2,15),h=rnd(2,10),ans=w*h;c={...c,theme:"tablero",order:`Tablero rectangular de ${w}×${h} dm.`,furniture:"table",dims:{w,h},title:"Área del tablero",question:`<strong>${w} dm ancho</strong> y <strong>${h} dm alto</strong>. ¿Área total?`,formulas:["Área = base × altura"],answer:ans,unit:"dm²",hint:`${w} × ${h} = ${ans}`,successMsg:`${ans} dm².`};}
+  else if(type==='perim_rect'){const w=rnd(2,12),h=rnd(2,8),ans=2*(w+h);c={...c,theme:"marco",order:`Marco de ${w}×${h} dm.`,furniture:"frame",dims:{w,h},title:"Perímetro del marco",question:`<strong>${w} dm</strong> por <strong>${h} dm</strong>. ¿Perímetro?`,formulas:["P = 2 × (base + altura)"],answer:ans,unit:"dm",hint:`2×(${w}+${h})=${ans}`,successMsg:`${ans} dm.`};}
+  else if(type==='area_tri'){const w=rnd(4,14),h=rnd(3,10),ans=Math.round(w*h/2*10)/10;c={...c,theme:"repisa triangular",order:`Repisa triangular base ${w} dm, h ${h} dm.`,furniture:"triangle",dims:{w,h},title:"Área del triángulo",question:`Base <strong>${w} dm</strong>, altura <strong>${h} dm</strong>. ¿Área?`,formulas:["Área = (base × altura) / 2"],answer:ans,unit:"dm²",hint:`(${w}×${h})/2=${ans}`,successMsg:`${ans} dm².`,tolerance:0.1};}
+  else if(type==='division'){const n=pick([2,3,4,5]),total=n*rnd(2,10),ans=total/n;c={...c,theme:"tablas",order:`Tabla de ${total} dm en ${n} partes iguales.`,furniture:"plank",dims:{w:total,h:2},title:"División",question:`<strong>${total} dm</strong> en <strong>${n} partes</strong>. ¿Cuánto mide cada una?`,formulas:["Parte = total ÷ n"],answer:ans,unit:"dm",hint:`${total}÷${n}=${ans}`,successMsg:`${ans} dm cada parte.`};}
+  else if(type==='scale'){const plano=rnd(2,8),factor=pick([2,3,4,5,10]),ans=plano*factor;c={...c,theme:"armario",order:`Plano ${plano} cm, escala 1cm=${factor}dm.`,furniture:"wardrobe",dims:{w:plano,scale:factor},title:"Escala",question:`Plano <strong>${plano} cm</strong>, escala <strong>1cm=${factor}dm</strong>. ¿Medida real?`,formulas:["Real = plano × factor"],answer:ans,unit:"dm",hint:`${plano}×${factor}=${ans}`,successMsg:`${ans} dm.`};}
+  else if(type==='pyth'){const triples=[[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15]];const [a,b,ans]=pick(triples);c={...c,theme:"viga diagonal",order:`Catetos ${a} dm y ${b} dm. ¿Diagonal?`,furniture:"diagonal",dims:{a,b},title:"Pitágoras",question:`Cateto <strong>${a} dm</strong>, cateto <strong>${b} dm</strong>. ¿Hipotenusa?`,formulas:["c²=a²+b²","c=√(a²+b²)"],answer:ans,unit:"dm",hint:`√(${a*a}+${b*b})=${ans}`,successMsg:`${ans} dm.`};}
+  else if(type==='area_circle'){const r=rnd(1,5),raw=Math.round(3.14*r*r*10)/10,ans=Math.round(raw);c={...c,theme:"mesa redonda",order:`Mesa redonda, radio ${r} dm.`,furniture:"circle",dims:{r},title:"Área del círculo",question:`Radio <strong>${r} dm</strong>, π≈3.14. ¿Área? (entero)`,formulas:["Área = π × r²"],answer:ans,unit:"dm²",tolerance:0.5,hint:`3.14×${r*r}≈${raw}≈${ans}`,successMsg:`≈${ans} dm².`};}
+  else{const p=pick([12,16,20,24,28,32]),ans=p/4;c={...c,theme:"cerco cuadrado",order:`${p} dm para un cerco cuadrado.`,furniture:"garden",dims:{p},title:"Cuadrado",question:`Perímetro <strong>${p} dm</strong>. ¿Lado?`,formulas:["Lado = P ÷ 4"],answer:ans,unit:"dm",hint:`${p}÷4=${ans}`,successMsg:`${ans} dm.`};}
+  return c;
+}
+
+let CHALLENGES=[...BASE_CHALLENGES];
+function ensureChallenges(n){while(CHALLENGES.length<=n)CHALLENGES.push(generateChallenge(CHALLENGES.length+1));}
+
+// ══════ DB ══════
+let db=null;
+async function initDB(){
+  const SQL=await initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`});
+  const saved=localStorage.getItem('carpenteriaDB');
+  if(saved){try{const buf=Uint8Array.from(atob(saved),c=>c.charCodeAt(0));db=new SQL.Database(buf);}catch(e){db=new SQL.Database();}}
+  else db=new SQL.Database();
+  db.run(`CREATE TABLE IF NOT EXISTS progress(id INTEGER PRIMARY KEY,score INTEGER DEFAULT 0,best_score INTEGER DEFAULT 0,current_level INTEGER DEFAULT 0,lives INTEGER DEFAULT 3,purchased TEXT DEFAULT '{}',sessions INTEGER DEFAULT 0,updated_at TEXT);`);
+  db.run(`CREATE TABLE IF NOT EXISTS levels(id INTEGER PRIMARY KEY AUTOINCREMENT,level_num INTEGER,theme TEXT,client TEXT,furniture TEXT,answer REAL,unit TEXT,hint TEXT,created_at TEXT);`);
+  db.run(`CREATE TABLE IF NOT EXISTS history(id INTEGER PRIMARY KEY AUTOINCREMENT,level_num INTEGER,answer_given REAL,correct INTEGER,score_earned INTEGER,timestamp TEXT);`);
+  const r=db.exec("SELECT COUNT(*) FROM progress;");
+  if(r[0].values[0][0]===0)db.run("INSERT INTO progress VALUES(1,0,0,0,3,'{}',0,datetime('now'));");
+  saveDB();
+}
+function saveDB(){if(!db)return;try{const d=db.export();localStorage.setItem('carpenteriaDB',btoa(String.fromCharCode(...d)));}catch(e){}}
+function dbSaveProgress(){if(!db)return;db.run(`UPDATE progress SET score=?,best_score=MAX(best_score,?),current_level=?,lives=?,purchased=?,updated_at=datetime('now') WHERE id=1;`,[score,score,currentIdx,lives,JSON.stringify(purchased)]);saveDB();}
+function dbLoadProgress(){if(!db)return null;const r=db.exec("SELECT * FROM progress WHERE id=1;");if(!r.length||!r[0].values.length)return null;const o={};r[0].columns.forEach((c,i)=>o[c]=r[0].values[0][i]);return o;}
+function dbLogHistory(lvl,ans,ok,pts){if(!db)return;db.run("INSERT INTO history(level_num,answer_given,correct,score_earned,timestamp)VALUES(?,?,?,?,datetime('now'));",[ lvl,ans,ok?1:0,pts]);saveDB();}
+
+// ══════ GAME STATE ══════
+let currentIdx=0,score=0,lives=3;
+let purchased={ruler:false,saw:false,angle:false,calc:false};
+const prices={ruler:30,saw:40,angle:50,calc:60};
+let devModeActive=false;
+const DEV_CODE='/2983&';
+
+// ══════ AUDIO ══════
+let audioCtx=null;
+function getAudio(){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return audioCtx;}
+function playTone(freq,type,dur,vol,delay=0){
+  const ac=getAudio();if(!ac)return;
+  const osc=ac.createOscillator(),gain=ac.createGain();
+  osc.connect(gain);gain.connect(ac.destination);
+  osc.type=type;osc.frequency.setValueAtTime(freq,ac.currentTime+delay);
+  gain.gain.setValueAtTime(vol,ac.currentTime+delay);
+  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+dur);
+  osc.start(ac.currentTime+delay);osc.stop(ac.currentTime+delay+dur+0.02);
+}
+function playNoise(dur,vol,delay=0){
+  const ac=getAudio();if(!ac)return;
+  const buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate);
+  const data=buf.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*0.3;
+  const src=ac.createBufferSource(),gain=ac.createGain(),filt=ac.createBiquadFilter();
+  filt.type='bandpass';filt.frequency.value=180;
+  src.buffer=buf;src.connect(filt);filt.connect(gain);gain.connect(ac.destination);
+  gain.gain.setValueAtTime(vol,ac.currentTime+delay);
+  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+dur);
+  src.start(ac.currentTime+delay);src.stop(ac.currentTime+delay+dur+0.02);
+}
+function soundCorrect(){playNoise(0.05,0.35,0);playTone(523,'sine',0.1,0.22,0.02);playTone(659,'sine',0.13,0.25,0.10);playTone(784,'sine',0.18,0.26,0.19);playTone(1047,'sine',0.26,0.2,0.29);}
+function soundWrong(){playNoise(0.09,0.65,0);playTone(200,'sawtooth',0.07,0.18,0.01);playTone(170,'square',0.11,0.13,0.07);playTone(140,'sawtooth',0.18,0.1,0.14);}
+function soundBuy(){playNoise(0.04,0.25,0);playTone(440,'sine',0.07,0.18,0.02);playTone(554,'sine',0.1,0.18,0.09);playTone(659,'sine',0.15,0.16,0.16);}
+function soundGameOver(){playTone(220,'sawtooth',0.2,0.3,0);playTone(196,'sawtooth',0.2,0.25,0.22);playTone(165,'sawtooth',0.3,0.2,0.44);playTone(110,'sawtooth',0.5,0.18,0.7);}
+function soundNextLevel(){[523,659,784,1047,1319].forEach((f,i)=>playTone(f,'sine',0.09,0.16,i*0.07));}
+
+// ══════ ANIMATIONS ══════
+function anim(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});}
+function spawnFloat(pts,x,y){
+  const el=document.createElement('div');el.className='score-float';el.textContent='+'+pts+' ★';
+  el.style.cssText=`left:${x}px;top:${y}px;`;document.body.appendChild(el);
+  let t=0,sy=y;
+  const f=()=>{t++;el.style.top=(sy-t*1.5)+'px';el.style.opacity=Math.max(0,1-t/50);if(t<55)requestAnimationFrame(f);else el.remove();};
+  requestAnimationFrame(f);
+}
+
+// ══════ CALC ══════
+let calcCur='0',calcExpr='',calcResult=false;
+function calcInput(v){
+  if(calcResult&&'0123456789.'.includes(v)){calcCur='0';calcResult=false;}
+  if(calcResult&&'+-*/'.includes(v))calcResult=false;
+  if(v==='.'&&calcCur.includes('.'))return;
+  if('+-*/'.includes(v)){calcExpr=calcCur+' '+v+' ';calcCur='';}
+  else{if(calcCur==='0'&&v!=='.')calcCur=v;else calcCur+=v;}
+  updCalc();
+}
+function calcEquals(){try{let full=calcExpr+calcCur;if(!full.trim())return;let r=Function('"use strict";return('+full+')')();r=Math.round(r*10000)/10000;document.getElementById('calcExpr').textContent=full+' =';calcCur=String(r);calcExpr='';calcResult=true;document.getElementById('calcDisplay').textContent=calcCur;}catch(e){document.getElementById('calcDisplay').textContent='Error';}}
+function calcSqrt(){try{let v=parseFloat(calcCur),r=Math.round(Math.sqrt(v)*10000)/10000;document.getElementById('calcExpr').textContent='√'+v+' =';calcCur=String(r);calcResult=true;document.getElementById('calcDisplay').textContent=calcCur;}catch(e){}}
+function calcClear(){calcCur='0';calcExpr='';calcResult=false;updCalc();}
+function calcBack(){if(calcResult){calcClear();return;}calcCur=calcCur.length>1?calcCur.slice(0,-1):'0';updCalc();}
+function updCalc(){document.getElementById('calcDisplay').textContent=calcCur||'0';document.getElementById('calcExpr').textContent=calcExpr;}
+
+// ══════ TOOL CONTENT ══════
+function buildRulerContent(c){const d=c.dims;let h='';if(d.w)h+=`<div class="ruler-section"><div class="ruler-label">Ancho / Base</div><div class="ruler-value">${d.w} <span>dm</span></div></div>`;if(d.h)h+=`<div class="ruler-section"><div class="ruler-label">Alto / Altura</div><div class="ruler-value">${d.h} <span>dm</span></div></div>`;if(d.r)h+=`<div class="ruler-section"><div class="ruler-label">Radio</div><div class="ruler-value">${d.r} <span>dm</span></div></div>`;if(d.a)h+=`<div class="ruler-section"><div class="ruler-label">Cateto a</div><div class="ruler-value">${d.a} <span>dm</span></div></div>`;if(d.b)h+=`<div class="ruler-section"><div class="ruler-label">Cateto b</div><div class="ruler-value">${d.b} <span>dm</span></div></div>`;if(d.p)h+=`<div class="ruler-section"><div class="ruler-label">Perímetro</div><div class="ruler-value">${d.p} <span>dm</span></div></div>`;if(d.scale)h+=`<div class="ruler-section"><div class="ruler-label">Escala</div><div class="ruler-value">1 cm = ${d.scale} <span>dm</span></div></div>`;h+=`<div class="ruler-formula"><div class="formula-main">${c.formulas[0]}</div><div style="font-size:11px;color:var(--wood-light);margin-top:3px;">Para este encargo</div></div>`;return h;}
+function buildSawContent(c){const d=c.dims;let rows='';if(d.w)rows+=`<tr><td>Longitud</td><td>${d.w} dm</td></tr>`;if(d.n)rows+=`<tr><td>Partes</td><td>${d.n}</td></tr>`;if(d.n&&d.w)rows+=`<tr><td>Cada parte</td><td>${d.w/d.n} dm</td></tr>`;if(d.scale)rows+=`<tr><td>Factor</td><td>× ${d.scale}</td></tr>`;if(d.p)rows+=`<tr><td>Perímetro</td><td>${d.p} dm</td></tr>`;return `<div class="saw-label">Datos del corte</div><table class="saw-table"><tbody>${rows}</tbody></table><div class="saw-cut-row">Pista: <b>${c.hint}</b></div>`;}
+function buildAngleContent(c){const d=c.dims,isPyth=c.furniture==='diagonal';return `<div class="angle-formula-box"><div class="af-title">Teorema de Pitágoras</div><div class="af-formula">c² = a² + b²</div><div class="af-desc">La hipotenusa es √(a² + b²).</div></div><div style="display:flex;justify-content:center;margin-bottom:11px;"><svg width="190" height="150" viewBox="0 0 190 150" fill="none"><polygon points="25,125 165,125 25,25" fill="rgba(168,96,46,0.08)" stroke="#6b3a1f" stroke-width="1.5"/><line x1="165" y1="125" x2="25" y2="25" stroke="#c87d3a" stroke-width="2.5"/><rect x="25" y="105" width="18" height="18" fill="none" stroke="#6b3a1f" stroke-width="1.2"/><text x="14" y="79" fill="#6b3a1f" font-family="Barlow Condensed,sans-serif" font-size="13" font-style="italic">a</text><text x="90" y="142" fill="#6b3a1f" font-family="Barlow Condensed,sans-serif" font-size="13" font-style="italic">b</text><text x="104" y="68" fill="#c87d3a" font-family="Barlow Condensed,sans-serif" font-size="14" font-weight="700" font-style="italic">c</text></svg></div><div class="af-desc" style="margin-bottom:9px;font-size:12px;">Calculá la hipotenusa ingresando los catetos:</div><div class="angle-calc-row"><label>a =</label><input type="number" id="angleA" value="${isPyth&&d.a?d.a:''}" placeholder="a" inputmode="decimal"><label>b =</label><input type="number" id="angleB" value="${isPyth&&d.b?d.b:''}" placeholder="b" inputmode="decimal"><button class="af-btn" onclick="calcHyp()">Calcular c</button></div><div class="angle-result" id="angleResult"></div>`;}
+function calcHyp(){const a=parseFloat(document.getElementById('angleA').value),b=parseFloat(document.getElementById('angleB').value);if(isNaN(a)||isNaN(b)){document.getElementById('angleResult').textContent='Ingresá ambos valores';return;}const c=Math.round(Math.sqrt(a*a+b*b)*1000)/1000;document.getElementById('angleResult').textContent=`c = √(${a}²+${b}²) = ${c} dm`;}
+
+// ══════ TOOLS ══════
+function handleTool(tool){
+  if(!purchased[tool]){showFeedback(false,`Herramienta bloqueada. Comprala (${prices[tool]} ★).`);anim(document.getElementById('toolInfo'),'anim-shake');return;}
+  const c=CHALLENGES[currentIdx];
+  if(tool==='calc'){calcClear();document.getElementById('overlayCalc').classList.add('visible');}
+  else if(tool==='ruler'){document.getElementById('rulerBody').innerHTML=buildRulerContent(c);document.getElementById('overlayRuler').classList.add('visible');}
+  else if(tool==='saw'){document.getElementById('sawBody').innerHTML=buildSawContent(c);document.getElementById('overlaySaw').classList.add('visible');}
+  else if(tool==='angle'){document.getElementById('angleBody').innerHTML=buildAngleContent(c);document.getElementById('overlayAngle').classList.add('visible');}
+}
+function closeTool(t){const m={calc:'overlayCalc',ruler:'overlayRuler',angle:'overlayAngle',saw:'overlaySaw'};document.getElementById(m[t]).classList.remove('visible');}
+document.querySelectorAll('.tool-overlay').forEach(el=>el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('visible');}));
+
+// ══════ SHOP ══════
+function updateShopAndTools(){
+  document.getElementById('starBalance').textContent=score;
+  document.getElementById('scoreDisplay').textContent=score;
+  ['ruler','saw','angle','calc'].forEach(t=>{
+    const btn=document.getElementById(`tool${t.charAt(0).toUpperCase()+t.slice(1)}`);
+    const lock=btn.querySelector('.t-lock');
+    if(purchased[t]){btn.classList.remove('locked');if(lock)lock.style.display='none';}
+    else{btn.classList.add('locked');if(lock)lock.style.display='';}
+  });
+  const cont=document.getElementById('shopContainer');if(!cont)return;cont.innerHTML='';
+  const names={ruler:'Regla',saw:'Sierra',angle:'Escuadra',calc:'Calculadora'};
+  const icons={ruler:'ti-ruler',saw:'ti-cut',angle:'ti-angle',calc:'ti-calculator'};
+  for(let[tool,price]of Object.entries(prices)){
+    const owned=purchased[tool];const row=document.createElement('div');row.className='shop-row';
+    row.innerHTML=`<div class="shop-name"><i class="ti ${icons[tool]}"></i>${names[tool]}</div><div class="shop-actions"><span class="shop-price">${price} ★</span>${owned?'<span class="buy-btn owned">Comprada</span>':`<button class="buy-btn" data-tool="${tool}">Comprar</button>`}</div>`;
+    if(!owned)row.querySelector('.buy-btn').addEventListener('click',()=>attemptBuy(tool));
+    cont.appendChild(row);
+  }
+}
+function attemptBuy(tool){
+  if(purchased[tool])return;
+  if(score>=prices[tool]){score-=prices[tool];purchased[tool]=true;updateShopAndTools();document.getElementById('toolInfo').innerHTML=`<b>${tool} desbloqueada.</b> Hacé clic para usarla.`;soundBuy();dbSaveProgress();}
+  else{showFeedback(false,`Necesitás ${prices[tool]} ★.`);anim(document.getElementById('shopContainer'),'anim-shake');}
+}
+
+// ══════ FEEDBACK ══════
+function showFeedback(ok,msg){const fb=document.getElementById('feedback');fb.className='feedback '+(ok?'ok':'err');fb.textContent=msg;clearTimeout(fb._t);fb._t=setTimeout(()=>{fb.className='feedback';},3500);}
+
+// ══════ CANVAS ══════
+const canvas=document.getElementById('furnitureCanvas'),ctx=canvas.getContext('2d');
+function resizeCanvas(){const r=canvas.parentElement.getBoundingClientRect();canvas.width=r.width||500;canvas.height=parseInt(getComputedStyle(canvas).height)||190;}
+function drawWood(x,y,w,h,col){ctx.fillStyle=col;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,3);else ctx.rect(x,y,w,h);ctx.fill();ctx.save();ctx.globalAlpha=0.08;ctx.strokeStyle='#3a1e0a';ctx.lineWidth=0.7;for(let i=8;i<h;i+=11){ctx.beginPath();ctx.moveTo(x+3,y+i);ctx.lineTo(x+w-3,y+i+(Math.random()-0.5)*2);ctx.stroke();}ctx.restore();ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,3);else ctx.rect(x,y,w,h);ctx.stroke();}
+function lbl(x,y,t){ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.fillStyle='#6b3a1f';ctx.textAlign='center';ctx.fillText(t,x,y);}
+function drawFurniture(c){
+  resizeCanvas();ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#f0e8d5';ctx.fillRect(0,0,canvas.width,canvas.height);
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,d=c.dims;ctx.lineWidth=1.5;
+  if(c.furniture==='table'){const tw=Math.min(d.w*22,W-60),th=Math.min(d.h*18,H-70);drawWood(cx-tw/2,cy-th/2-8,tw,th,'#9a4810');drawWood(cx-tw/2+10,cy+th/2-8,13,40,'#6b3a1f');drawWood(cx+tw/2-23,cy+th/2-8,13,40,'#6b3a1f');lbl(cx,cy-th/2-20,`${d.w} dm`);lbl(cx+tw/2+22,cy,'h:'+d.h+' dm');}
+  else if(c.furniture==='frame'){const fw=Math.min(d.w*26,W-60),fh=Math.min(d.h*26,H-50);drawWood(cx-fw/2,cy-fh/2,fw,fh,'#7a3010');ctx.fillStyle='#c5dcee';ctx.fillRect(cx-fw/2+13,cy-fh/2+13,fw-26,fh-26);lbl(cx,cy-fh/2-13,`${d.w} dm`);lbl(cx+fw/2+18,cy,`${d.h} dm`);}
+  else if(c.furniture==='triangle'){const bw=Math.min(d.w*18,W-60),bh=Math.min(d.h*22,H-50);ctx.beginPath();ctx.moveTo(cx-bw/2,cy+bh/2);ctx.lineTo(cx+bw/2,cy+bh/2);ctx.lineTo(cx-bw/2,cy-bh/2);ctx.fillStyle='#a04018';ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.stroke();lbl(cx,cy+bh/2+15,`base: ${d.w} dm`);ctx.save();ctx.fillStyle='#6b3a1f';ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.textAlign='right';ctx.fillText(`h: ${d.h} dm`,cx-bw/2-3,cy);ctx.restore();}
+  else if(c.furniture==='plank'){const pw=Math.min(d.w*16,W-60);drawWood(cx-pw/2,cy-16,pw,32,'#9a5010');ctx.strokeStyle='#c0291e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy-22);ctx.lineTo(cx,cy+22);ctx.stroke();lbl(cx-pw/4,cy+32,`${d.w/2} dm`);lbl(cx+pw/4,cy+32,`${d.w/2} dm`);}
+  else if(c.furniture==='wardrobe'){drawWood(cx-50,cy-78,100,150,'#7a3010');ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(cx-37,cy-64,32,55);ctx.fillRect(cx+5,cy-64,32,55);lbl(cx,cy-90,`plano: ${d.w}cm → ${d.w*(d.scale||1)}dm`);}
+  else if(c.furniture==='shelf3'){const n=d.n||3,sw=(Math.min((d.w||15)*14,W-60))/n;for(let i=0;i<n;i++)drawWood(cx-(n*sw)/2+i*(sw+4),cy-9,sw,18,i%2===0?'#9a4810':'#7a3808');lbl(cx,cy-22,`${d.w} dm total`);}
+  else if(c.furniture==='diagonal'){const sc=28,x0=cx-d.b*sc/2,y0=cy+d.a*sc/2;ctx.strokeStyle='#6b3a1f';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+d.b*sc,y0);ctx.stroke();ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0,y0-d.a*sc);ctx.stroke();ctx.strokeStyle='#c87d3a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x0,y0-d.a*sc);ctx.lineTo(x0+d.b*sc,y0);ctx.stroke();ctx.lineWidth=1;lbl(x0+d.b*sc/2,y0+15,`b=${d.b}dm`);ctx.save();ctx.fillStyle='#6b3a1f';ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.textAlign='right';ctx.fillText(`a=${d.a}dm`,x0-3,y0-d.a*sc/2);ctx.restore();ctx.save();ctx.fillStyle='#c87d3a';ctx.font='700 12px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.fillText('c=?',x0+d.b*sc/2+22,y0-d.a*sc/2-13);ctx.restore();}
+  else if(c.furniture==='circle'){const r=d.r*Math.min(40,H/5);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='#a04018';ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1.5;ctx.stroke();ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r,cy);ctx.stroke();lbl(cx+r/2,cy-7,`r=${d.r}dm`);}
+  else if(c.furniture==='garden'){const p=d.p||20,side=p/4,px=Math.min(side*22,W-60);drawWood(cx-px/2,cy-px/2,px,px,'#9a4810');ctx.fillStyle='rgba(45,90,61,0.15)';ctx.fillRect(cx-px/2+7,cy-px/2+7,px-14,px-14);lbl(cx,cy,'? dm × 4');lbl(cx,cy+px/2+15,`P=${p}dm`);}
+  else drawWood(cx-55,cy-35,110,70,'#9a4810');
+}
+
+// ══════ LOAD CHALLENGE ══════
+function loadChallenge(idx){
+  ensureChallenges(idx+3);
+  const c=CHALLENGES[idx];
+  document.getElementById('orderCard').innerHTML=`<div class="client-row"><div class="client-avatar">${c.clientIcon}</div><div><div class="client-name">${c.client}</div><div class="client-tag">Encargo · ${c.theme}</div></div></div><div class="order-text">${c.order}</div><div class="dimension-chips" id="dimChips"></div>`;
+  const dc=document.getElementById('dimChips'),d=c.dims;
+  if(d.w)dc.innerHTML+=`<span class="dim-chip">Ancho: ${d.w} dm</span>`;
+  if(d.h)dc.innerHTML+=`<span class="dim-chip">Alto: ${d.h} dm</span>`;
+  if(d.r)dc.innerHTML+=`<span class="dim-chip">Radio: ${d.r} dm</span>`;
+  if(d.a)dc.innerHTML+=`<span class="dim-chip">Cateto a: ${d.a} dm</span>`;
+  if(d.b)dc.innerHTML+=`<span class="dim-chip">Cateto b: ${d.b} dm</span>`;
+  if(d.p)dc.innerHTML+=`<span class="dim-chip">P: ${d.p} dm</span>`;
+  if(d.scale)dc.innerHTML+=`<span class="dim-chip">1cm=${d.scale}dm</span>`;
+  document.getElementById('challengeTitle').textContent=c.title;
+  document.getElementById('challengeText').innerHTML=c.question;
+  document.getElementById('unitLabel').textContent=`Respuesta en ${c.unit}`;
+  document.getElementById('formulasBox').innerHTML=c.formulas.map(f=>`<span class="formula-tag">${f}</span>`).join('');
+  const total=Math.max(CHALLENGES.length,idx+1);
+  document.getElementById('progressFill').style.width=((idx/total)*100)+'%';
+  document.getElementById('levelNum').textContent='Nivel '+c.level;
+  document.getElementById('challengeNum').textContent=(idx+1)+'/∞';
+  document.getElementById('answerInput').value='';
+  document.getElementById('feedback').className='feedback';
+  drawFurniture(c);
+  if(devModeActive)devRefreshState();
+}
+
+// ══════ CHECK ANSWER ══════
+function checkAnswer(){
+  const raw=document.getElementById('answerInput').value.trim();
+  if(raw===DEV_CODE){activateDevMode();document.getElementById('answerInput').value='';return;}
+  const num=parseFloat(raw);
+  if(isNaN(num)){anim(document.getElementById('answerInput'),'anim-shake');showFeedback(false,'Escribí un número.');return;}
+  const c=CHALLENGES[currentIdx];
+  const ok=Math.abs(num-c.answer)<=(c.tolerance||0);
+  dbLogHistory(c.level,num,ok,ok?10+c.level*5:0);
+  if(ok){
+    const pts=10+c.level*5;score+=pts;
+    updateShopAndTools();
+    showFeedback(true,`Correcto. ${c.successMsg} +${pts} ★`);
+    soundCorrect();
+    anim(document.querySelector('.challenge-panel'),'anim-pop');
+    anim(document.querySelector('.challenge-panel'),'anim-flash-green');
+    const btn=document.querySelector('.btn-verify');
+    const r=btn.getBoundingClientRect();
+    spawnFloat(pts,r.left+r.width/2-20,r.top+window.scrollY-8);
+    anim(document.getElementById('hudScore'),'anim-pop');
+    dbSaveProgress();
+    setTimeout(()=>{soundNextLevel();nextChallenge();},1900);
+  } else {
+    lives--;
+    document.getElementById('livesDisplay').textContent=lives>0?lives:'0';
+    showFeedback(false,`Incorrecto. Pista: ${c.hint}`);
+    soundWrong();
+    anim(document.getElementById('answerInput'),'anim-shake');
+    anim(document.querySelector('.challenge-panel'),'anim-shake');
+    anim(document.querySelector('.challenge-panel'),'anim-flash-red');
+    anim(document.getElementById('hudLives'),'anim-heartbeat');
+    dbSaveProgress();
+    if(lives<=0)setTimeout(()=>{soundGameOver();showGameOver();},900);
+  }
+}
+
+function showGameOver(){document.getElementById('goScore').textContent=score;document.getElementById('goLevel').textContent=currentIdx+1;document.getElementById('gameOverScreen').style.display='flex';}
+function hardRestart(){document.getElementById('gameOverScreen').style.display='none';currentIdx=0;score=0;lives=3;purchased={ruler:false,saw:false,angle:false,calc:false};CHALLENGES=[...BASE_CHALLENGES];document.getElementById('livesDisplay').textContent='3';updateShopAndTools();loadChallenge(0);dbSaveProgress();}
+function continueAfterGameOver(){lives=3;document.getElementById('livesDisplay').textContent='3';document.getElementById('gameOverScreen').style.display='none';dbSaveProgress();}
+function nextChallenge(){if(currentIdx===BASE_CHALLENGES.length-1){document.getElementById('progressFill').style.width='100%';document.getElementById('winMsg').innerHTML=`Completaste los 9 encargos originales con <strong>${score} estrellas</strong>. Los niveles infinitos continúan.`;document.getElementById('winScreen').style.display='flex';return;}currentIdx++;loadChallenge(currentIdx);}
+function continueInfinite(){document.getElementById('winScreen').style.display='none';currentIdx++;ensureChallenges(currentIdx);loadChallenge(currentIdx);}
+
+// ══════ DEV MODE ══════
+function activateDevMode(){devModeActive=true;document.body.classList.add('dev-mode');document.getElementById('devPanel').classList.add('visible');document.getElementById('devBadge').classList.add('active');devRefreshState();devRefreshLevelTable();devRefreshEditSelect();showFeedback(true,'Modo developer activado.');}
+function toggleDevPanel(){const p=document.getElementById('devPanel');p.classList.contains('visible')?p.classList.remove('visible'):(p.classList.add('visible'),devRefreshState(),devRefreshLevelTable(),devRefreshEditSelect());}
+function devTab(id){document.querySelectorAll('.dev-tab').forEach((t,i)=>t.classList.toggle('active',['state','levels','edit','db','export'][i]===id));document.querySelectorAll('.dev-section').forEach(s=>s.classList.toggle('active',s.id==='dev'+id.charAt(0).toUpperCase()+id.slice(1)));if(id==='levels')devRefreshLevelTable();if(id==='edit')devRefreshEditSelect();}
+function devRefreshState(){document.getElementById('devScore').value=score;document.getElementById('devLives').value=lives;document.getElementById('devIdx').value=currentIdx;document.getElementById('devRuler').checked=purchased.ruler;document.getElementById('devSaw').checked=purchased.saw;document.getElementById('devAngle').checked=purchased.angle;document.getElementById('devCalc').checked=purchased.calc;}
+function devApplyState(){score=parseInt(document.getElementById('devScore').value)||0;lives=parseInt(document.getElementById('devLives').value)||0;const ni=parseInt(document.getElementById('devIdx').value)||0;document.getElementById('scoreDisplay').textContent=score;document.getElementById('livesDisplay').textContent=lives;document.getElementById('starBalance').textContent=score;if(ni!==currentIdx){ensureChallenges(ni);currentIdx=ni;loadChallenge(currentIdx);}dbSaveProgress();document.getElementById('devStateMsg').textContent='Aplicado.';}
+function devApplyTools(){purchased.ruler=document.getElementById('devRuler').checked;purchased.saw=document.getElementById('devSaw').checked;purchased.angle=document.getElementById('devAngle').checked;purchased.calc=document.getElementById('devCalc').checked;updateShopAndTools();}
+function devGiveStars(n){score+=n;document.getElementById('devScore').value=score;document.getElementById('scoreDisplay').textContent=score;document.getElementById('starBalance').textContent=score;dbSaveProgress();}
+function devUnlockAll(){purchased={ruler:true,saw:true,angle:true,calc:true};updateShopAndTools();devRefreshState();}
+function devNextLevel(){ensureChallenges(currentIdx+1);currentIdx++;loadChallenge(currentIdx);document.getElementById('devIdx').value=currentIdx;}
+function devPrevLevel(){if(currentIdx>0){currentIdx--;loadChallenge(currentIdx);document.getElementById('devIdx').value=currentIdx;}}
+function devResetSave(){localStorage.removeItem('carpenteriaDB');document.getElementById('devStateMsg').textContent='Guardado borrado. Recargá.';}
+function devRefreshLevelTable(){ensureChallenges(Math.max(currentIdx+5,14));const t=document.getElementById('devLevelTable');t.innerHTML=`<thead><tr><th>#</th><th>Nivel</th><th>Tema</th><th>Cliente</th><th>Tipo</th><th>Resp.</th><th>Unit</th><th>Edit</th></tr></thead>`;const tb=document.createElement('tbody');CHALLENGES.forEach((c,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${i}</td><td>${c.level}</td><td>${c.theme}</td><td>${c.client}</td><td>${c.furniture}</td><td>${c.answer}</td><td>${c.unit}</td><td><button class="dev-edit-btn" onclick="devEditLevel(${i})">Editar</button></td>`;tb.appendChild(tr);});t.appendChild(tb);document.getElementById('devLevelsMsg').textContent=`${CHALLENGES.length} niveles.`;}
+const DEV_FIELDS=['level','theme','client','clientIcon','order','furniture','title','question','unit','answer','tolerance','hint','successMsg'];
+const DEV_LABELS={level:'Nivel',theme:'Tema',client:'Cliente',clientIcon:'Icono',order:'Descripción',furniture:'Tipo mueble',title:'Título',question:'Pregunta HTML',unit:'Unidad',answer:'Respuesta',tolerance:'Tolerancia',hint:'Pista',successMsg:'Msg éxito'};
+const FUR_TYPES=['table','frame','triangle','plank','wardrobe','shelf3','diagonal','circle','garden'];
+function devRefreshEditSelect(){ensureChallenges(Math.max(currentIdx+5,14));const s=document.getElementById('devEditSelect');s.innerHTML=CHALLENGES.map((c,i)=>`<option value="${i}" ${i===currentIdx?'selected':''}>#${i} — ${c.theme} (${c.client})</option>`).join('');devLoadEditForm();}
+function devLoadEditForm(){const idx=parseInt(document.getElementById('devEditSelect').value)||0,c=CHALLENGES[idx];const f=document.getElementById('devEditForm');f.innerHTML=DEV_FIELDS.map(field=>{if(field==='furniture')return`<div><span class="dev-label">${DEV_LABELS[field]}</span><select class="dev-select dev-input" data-field="${field}" style="width:100%">${FUR_TYPES.map(t=>`<option value="${t}" ${c[field]===t?'selected':''}>${t}</option>`).join('')}</select></div>`;const long=['order','question','hint','successMsg'].includes(field);return`<div><span class="dev-label">${DEV_LABELS[field]}</span>${long?`<textarea class="dev-input dev-textarea" data-field="${field}">${c[field]||''}</textarea>`:`<input class="dev-input" data-field="${field}" type="${['answer','tolerance','level'].includes(field)?'number':'text'}" value="${c[field]||''}">`}</div>`;}).join('');f.innerHTML+=`<div style="grid-column:1/-1"><span class="dev-label">Dimensiones (JSON)</span><input class="dev-input" id="devDimsInput" value='${JSON.stringify(c.dims||{})}'></div>`;f.innerHTML+=`<div style="grid-column:1/-1"><span class="dev-label">Fórmulas (una por línea)</span><textarea class="dev-input dev-textarea" id="devFormulasInput" style="min-height:45px">${(c.formulas||[]).join('\n')}</textarea></div>`;}
+function devEditLevel(idx){document.getElementById('devEditSelect').value=idx;devLoadEditForm();devTab('edit');}
+function devSaveEdit(){const idx=parseInt(document.getElementById('devEditSelect').value)||0,c=CHALLENGES[idx];document.querySelectorAll('#devEditForm [data-field]').forEach(el=>{const f=el.dataset.field;if(['answer','tolerance','level'].includes(f))c[f]=parseFloat(el.value)||0;else c[f]=el.value;});try{c.dims=JSON.parse(document.getElementById('devDimsInput').value);}catch(e){}c.formulas=document.getElementById('devFormulasInput').value.split('\n').filter(Boolean);CHALLENGES[idx]=c;if(db){db.run(`INSERT OR REPLACE INTO levels(id,level_num,theme,client,furniture,answer,unit,hint,created_at)VALUES(${idx+1},?,?,?,?,?,?,?,datetime('now'));`,[c.level,c.theme,c.client,c.furniture,c.answer,c.unit,c.hint]);saveDB();}if(idx===currentIdx)loadChallenge(currentIdx);devRefreshLevelTable();devRefreshEditSelect();document.getElementById('devEditMsg').textContent=`Nivel #${idx} guardado.`;}
+function devDeleteLevel(){const idx=parseInt(document.getElementById('devEditSelect').value)||0;if(idx<BASE_CHALLENGES.length){document.getElementById('devEditMsg').textContent='No se pueden eliminar los 9 niveles base.';return;}CHALLENGES.splice(idx,1);if(currentIdx>=CHALLENGES.length)currentIdx=CHALLENGES.length-1;devRefreshLevelTable();devRefreshEditSelect();loadChallenge(currentIdx);document.getElementById('devEditMsg').textContent='Eliminado.';}
+function devAddLevel(){CHALLENGES.push(generateChallenge(CHALLENGES.length+1));devRefreshLevelTable();devRefreshEditSelect();document.getElementById('devLevelsMsg').textContent=`Nivel #${CHALLENGES.length-1} agregado.`;}
+function devRunSql(){if(!db){document.getElementById('devSqlResult').textContent='DB no lista.';return;}try{const r=db.exec(document.getElementById('devSqlInput').value);saveDB();if(!r.length){document.getElementById('devSqlResult').textContent='OK';return;}let out='';r.forEach(res=>{out+=res.columns.join(' | ')+'\n'+res.columns.map(()=>'—').join('—|—')+'\n';res.values.forEach(row=>out+=row.join(' | ')+'\n');});document.getElementById('devSqlResult').textContent=out;}catch(e){document.getElementById('devSqlResult').textContent='ERROR: '+e.message;}}
+function devResetDb(){localStorage.removeItem('carpenteriaDB');document.getElementById('devSqlResult').textContent='DB reseteada. Recargá.';}
+function devExportCode(){const src=document.documentElement.outerHTML;const blob=new Blob([src],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carpinteria_export.html';a.click();document.getElementById('devExportMsg').textContent='Descargando...';}
+
+// ══════ START ══════
+async function startGame(){
+  document.getElementById('introScreen').style.display='none';
+  const saved=dbLoadProgress();
+  if(saved){score=saved.score||0;lives=saved.lives||3;currentIdx=saved.current_level||0;try{purchased={...purchased,...JSON.parse(saved.purchased||'{}')};}catch(e){}}
+  if(db)db.run("UPDATE progress SET sessions=sessions+1,updated_at=datetime('now') WHERE id=1;");
+  ensureChallenges(currentIdx+5);updateShopAndTools();loadChallenge(currentIdx);dbSaveProgress();
+}
+
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){if(w<2*r)r=w/2;if(h<2*r)r=h/2;this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);return this;};
+}
+window.addEventListener('resize',()=>{if(CHALLENGES[currentIdx])drawFurniture(CHALLENGES[currentIdx]);});
+
+// Expose globals
+Object.assign(window,{startGame,checkAnswer,hardRestart,continueAfterGameOver,continueInfinite,toggleDevPanel,devTab,devApplyState,devApplyTools,devGiveStars,devUnlockAll,devNextLevel,devPrevLevel,devResetSave,devRunSql,devResetDb,devLoadEditForm,devSaveEdit,devDeleteLevel,devAddLevel,devEditLevel,devExportCode,calcInput,calcEquals,calcSqrt,calcClear,calcBack,closeTool,calcHyp,handleTool});
+
+initDB().then(()=>console.log('[Carpintería] DB lista. Dev: /2983&')).catch(()=>{db=null;});
+</script>
+</body>
+</html>'''
+
+with open('/mnt/user-data/outputs/carpinteria/index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+print(f"Written {len(html)} chars, {html.count(chr(10))} lines")

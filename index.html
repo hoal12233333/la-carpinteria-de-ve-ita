@@ -71,7 +71,7 @@ body{font-family:'Barlow',sans-serif;background:var(--wood-dark);background-imag
 .challenge-title-head{font-family:'Libre Baskerville',serif;font-size:17px;color:var(--cream);margin-bottom:8px;}
 .answer-zone{display:flex;flex-direction:column;gap:8px;min-width:180px;}
 .unit-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(200,125,58,0.7);text-align:center;}
-.answer-input{font-family:'Barlow Condensed',sans-serif;font-size:30px;width:100%;padding:10px 14px;border:1.5px solid rgba(200,125,58,0.4);background:rgba(255,255,255,0.05);color:var(--amber);text-align:center;outline:none;letter-spacing:2px;border-radius:2px;transition:border-color 0.2s;-moz--appearance:textfield;}
+.answer-input{font-family:'Barlow Condensed',sans-serif;font-size:30px;width:100%;padding:10px 14px;border:1.5px solid rgba(200,125,58,0.4);background:rgba(255,255,255,0.05);color:var(--amber);text-align:center;outline:none;letter-spacing:2px;border-radius:2px;transition:border-color 0.2s;-moz-appearance:textfield;}
 .answer-input::-webkit-inner-spin-button,.answer-input::-webkit-outer-spin-button{-webkit-appearance:none;}
 .answer-input:focus{border-color:var(--amber);}
 .btn-verify{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:11px 20px;border:none;background:var(--amber);color:var(--ink);cursor:pointer;border-radius:2px;transition:background 0.15s,transform 0.1s;}
@@ -191,6 +191,51 @@ body{font-family:'Barlow',sans-serif;background:var(--wood-dark);background-imag
 .btn-retry:hover{background:#d03020;}
 .btn-continue-go{font-family:'Libre Baskerville',serif;font-size:16px;font-style:italic;font-weight:700;padding:12px 32px;background:var(--wood-dark);color:var(--amber);border:none;border-radius:2px;cursor:pointer;box-shadow:0 3px 0 var(--ink);}
 
+/* ── ANIMATIONS ── */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  15%{transform:translateX(-8px) rotate(-0.5deg);}
+  30%{transform:translateX(7px) rotate(0.4deg);}
+  45%{transform:translateX(-6px) rotate(-0.3deg);}
+  60%{transform:translateX(5px);}
+  75%{transform:translateX(-3px);}
+  90%{transform:translateX(2px);}
+}
+@keyframes successPop{
+  0%{transform:scale(1);}
+  30%{transform:scale(1.025);}
+  60%{transform:scale(0.99);}
+  100%{transform:scale(1);}
+}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1);}
+  20%{transform:scale(1.3);}
+  40%{transform:scale(0.95);}
+  60%{transform:scale(1.15);}
+}
+@keyframes flashRed{
+  0%,100%{background:var(--ink);}
+  30%{background:rgba(140,30,20,0.35);}
+}
+.shake{animation:shake 0.45s cubic-bezier(.36,.07,.19,.97);}
+.success-pop{animation:successPop 0.35s ease;}
+.flash-red{animation:flashRed 0.5s ease;}
+.hud-pill.heartbeat .val{animation:heartbeat 0.4s ease;}
+
+/* ── SCORE FLOAT ── */
+.score-float{
+  position:fixed;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  color:#80d0a0;
+  pointer-events:none;
+  z-index:999;
+  opacity:1;
+  transition:none;
+  text-shadow:0 2px 8px rgba(0,0,0,0.6);
+}
+
 /* ─── DEV MODE ─── */
 body.dev-mode{border-top:3px solid var(--dev-accent);}
 .dev-panel{display:none;width:100%;background:var(--dev);border-bottom:1px solid var(--dev-border);padding:0;}
@@ -224,15 +269,82 @@ body.dev-mode{border-top:3px solid var(--dev-accent);}
 /* WIN */
 #winScreen{display:none;}
 
-@media(max-width:680px){
-  .game-wrap{grid-template-columns:1fr;padding:0 16px;}
-  .right-col{grid-row:auto;}
-  .challenge-panel{grid-column:1;}
-  .challenge-body{flex-direction:column;}
-  .answer-zone{min-width:unset;}
-  .masthead{padding:0 16px;}
-  .progress-bar{padding:12px 16px 0;}
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:720px){
+  /* Masthead collapses to 2 rows */
+  .masthead{height:auto;flex-wrap:wrap;padding:10px 14px;gap:8px;}
+  .masthead-left{flex:1;min-width:0;}
+  .masthead-sup{display:none;}
+  .masthead-name{font-size:15px;}
+  .masthead-right{flex-wrap:wrap;gap:4px;}
+  .hud-pill{height:28px;padding:0 10px;font-size:13px;}
+  .dev-badge{height:28px;padding:0 8px;font-size:10px;}
+
+  /* Progress */
+  .progress-bar{padding:10px 14px 0;gap:8px;}
+  .prog-label{display:none;}
+
+  /* Game grid: single column */
+  .game-wrap{
+    grid-template-columns:1fr;
+    padding:0 12px;
+    gap:10px;
+  }
+  .right-col{grid-row:auto;order:3;}
+  .challenge-panel{grid-column:1;order:2;}
+
+  /* Collapsed tools: horizontal scroll strip */
+  .tools-body{flex-direction:row;overflow-x:auto;padding:8px;gap:6px;-webkit-overflow-scrolling:touch;}
+  .tool-btn{flex-direction:column;min-width:72px;padding:8px 6px;gap:4px;font-size:11px;align-items:center;text-align:center;}
+  .tool-btn span{font-size:10px;line-height:1.2;}
+  .tool-btn .t-lock{display:none;}
+  .tool-btn .ti{font-size:20px;}
+  .tool-status{display:none;}
+  .formulas-wrap{padding:6px 8px 8px;}
+
+  /* Shop: compact */
+  .shop-body{padding:8px 10px 10px;}
+  .shop-row{padding:5px 0;}
+  .stars-balance{margin-bottom:6px;}
+
+  /* Challenge panel: stack vertically */
+  .challenge-body{padding:14px;flex-direction:column;gap:14px;}
+  .answer-zone{min-width:unset;width:100%;}
+  .answer-input{font-size:36px;padding:14px;}
+  .btn-verify{padding:13px;font-size:14px;}
+  .challenge-title-head{font-size:15px;}
+  .challenge-q{font-size:14px;}
+
+  /* Canvas taller on mobile for visibility */
+  .furniture-canvas{height:180px;}
+
+  /* Panel body padding tighter */
+  .panel-body{padding:12px;}
+  .order-text{font-size:13px;padding:8px 10px;}
+
+  /* Overlay cards */
+  .intro-card{padding:28px 22px 24px;}
+  .intro-card h1{font-size:22px;}
+  .gameover-card{padding:28px 22px;}
+
+  /* Tool windows take most of screen */
+  .tool-window{width:96vw;max-height:90vh;overflow-y:auto;}
+
+  /* Dev panel scrollable */
+  .dev-section{padding:10px 12px;overflow-x:auto;}
   .dev-grid{grid-template-columns:1fr;}
+  .dev-tab{padding:7px 12px;font-size:9px;letter-spacing:2px;}
+  .dev-table{font-size:10px;}
+  .dev-table th,.dev-table td{padding:4px 5px;}
+}
+
+@media(max-width:400px){
+  .masthead-name{font-size:13px;}
+  .logo-mark{width:28px;height:28px;font-size:14px;}
+  .hud-pill{padding:0 7px;font-size:12px;height:26px;}
+  .tool-btn{min-width:62px;}
+  .answer-input{font-size:30px;}
+  .gameover-score{font-size:38px;}
 }
 </style>
 </head>
@@ -810,6 +922,111 @@ function attemptBuy(tool){
 }
 
 // ══════════════════════════════════════════════════════════════
+//  WEB AUDIO SOUND ENGINE
+// ══════════════════════════════════════════════════════════════
+let audioCtx = null;
+function getAudio(){
+  if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  return audioCtx;
+}
+function playTone(freq,type,duration,vol,delay=0,fadeOut=true){
+  const ac=getAudio();if(!ac)return;
+  const osc=ac.createOscillator();
+  const gain=ac.createGain();
+  osc.connect(gain);gain.connect(ac.destination);
+  osc.type=type;osc.frequency.setValueAtTime(freq,ac.currentTime+delay);
+  gain.gain.setValueAtTime(vol,ac.currentTime+delay);
+  if(fadeOut)gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+duration);
+  osc.start(ac.currentTime+delay);
+  osc.stop(ac.currentTime+delay+duration+(fadeOut?0.02:0));
+}
+function playNoise(duration,vol,delay=0){
+  const ac=getAudio();if(!ac)return;
+  const buf=ac.createBuffer(1,ac.sampleRate*duration,ac.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*0.3;
+  const src=ac.createBufferSource();src.buffer=buf;
+  const gain=ac.createGain();
+  const filter=ac.createBiquadFilter();filter.type='bandpass';filter.frequency.value=200;
+  src.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+  gain.gain.setValueAtTime(vol,ac.currentTime+delay);
+  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+duration);
+  src.start(ac.currentTime+delay);src.stop(ac.currentTime+delay+duration+0.02);
+}
+
+function soundCorrect(){
+  // Upward ding — wood-knock + bright chime
+  playNoise(0.06,0.4,0);
+  playTone(523,'sine',0.12,0.25,0.02);     // C5
+  playTone(659,'sine',0.15,0.28,0.10);     // E5
+  playTone(784,'sine',0.22,0.3,0.19);      // G5
+  playTone(1047,'sine',0.28,0.22,0.29);    // C6
+}
+function soundWrong(){
+  // Low thud + dissonant buzz
+  playNoise(0.08,0.6,0);
+  playTone(180,'sawtooth',0.08,0.18,0.01);
+  playTone(160,'square',0.12,0.12,0.05);
+  playTone(140,'sawtooth',0.15,0.1,0.12);
+}
+function soundBuy(){
+  playNoise(0.04,0.3,0);
+  playTone(440,'sine',0.08,0.2,0.02);
+  playTone(554,'sine',0.12,0.2,0.09);
+  playTone(659,'sine',0.18,0.18,0.16);
+}
+function soundGameOver(){
+  playTone(220,'sawtooth',0.2,0.3,0);
+  playTone(196,'sawtooth',0.2,0.25,0.22);
+  playTone(165,'sawtooth',0.3,0.2,0.44);
+  playTone(110,'sawtooth',0.5,0.18,0.7);
+}
+function soundNextLevel(){
+  [523,659,784,1047,1319].forEach((f,i)=>playTone(f,'sine',0.1,0.18,i*0.07));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ANIMATIONS
+// ══════════════════════════════════════════════════════════════
+function animShake(el){
+  el.classList.remove('shake');
+  void el.offsetWidth; // reflow
+  el.classList.add('shake');
+  el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true});
+}
+function animSuccess(el){
+  el.classList.remove('success-pop');
+  void el.offsetWidth;
+  el.classList.add('success-pop');
+  el.addEventListener('animationend',()=>el.classList.remove('success-pop'),{once:true});
+}
+function animFlashRed(el){
+  el.classList.remove('flash-red');
+  void el.offsetWidth;
+  el.classList.add('flash-red');
+  el.addEventListener('animationend',()=>el.classList.remove('flash-red'),{once:true});
+}
+function animHeartbeat(pill){
+  pill.classList.add('heartbeat');
+  setTimeout(()=>pill.classList.remove('heartbeat'),500);
+}
+function spawnScoreFloat(pts, x, y){
+  const el=document.createElement('div');
+  el.className='score-float';
+  el.textContent='+'+pts+' ★';
+  el.style.left=x+'px';el.style.top=y+'px';
+  document.body.appendChild(el);
+  let startY=y, tick=0;
+  const anim=()=>{
+    tick++;
+    el.style.top=(startY - tick*1.4)+'px';
+    el.style.opacity=Math.max(0,1-tick/55);
+    if(tick<60)requestAnimationFrame(anim);else el.remove();
+  };
+  requestAnimationFrame(anim);
+}
+
+// ══════════════════════════════════════════════════════════════
 //  FEEDBACK
 // ══════════════════════════════════════════════════════════════
 function showFeedback(ok,msg){
@@ -861,340 +1078,4 @@ function loadChallenge(idx){
   const c=CHALLENGES[idx];
   document.getElementById('orderCard').innerHTML=`
     <div class="client-row">
-      <div class="client-avatar">${c.clientIcon}</div>
-      <div class="client-meta"><div class="client-name">${c.client}</div><div class="client-tag">Encargo · ${c.theme}</div></div>
-    </div>
-    <div class="order-text">${c.order}</div>
-    <div class="dimension-chips" id="dimChips"></div>`;
-  const dc=document.getElementById('dimChips');
-  const d=c.dims;
-  if(d.w)dc.innerHTML+=`<span class="dim-chip">Ancho: ${d.w} dm</span>`;
-  if(d.h)dc.innerHTML+=`<span class="dim-chip">Alto: ${d.h} dm</span>`;
-  if(d.r)dc.innerHTML+=`<span class="dim-chip">Radio: ${d.r} dm</span>`;
-  if(d.a)dc.innerHTML+=`<span class="dim-chip">Cateto a: ${d.a} dm</span>`;
-  if(d.b)dc.innerHTML+=`<span class="dim-chip">Cateto b: ${d.b} dm</span>`;
-  if(d.p)dc.innerHTML+=`<span class="dim-chip">Perímetro: ${d.p} dm</span>`;
-  if(d.scale)dc.innerHTML+=`<span class="dim-chip">Escala: 1cm=${d.scale}dm</span>`;
-  document.getElementById('challengeTitle').textContent=c.title;
-  document.getElementById('challengeText').innerHTML=c.question;
-  document.getElementById('unitLabel').textContent=`Respuesta en ${c.unit}`;
-  document.getElementById('formulasBox').innerHTML=c.formulas.map(f=>`<span class="formula-tag">${f}</span>`).join('');
-  const total=Math.max(CHALLENGES.length,idx+1);
-  document.getElementById('progressFill').style.width=((idx/total)*100)+'%';
-  document.getElementById('levelNum').textContent='Nivel '+c.level;
-  document.getElementById('challengeNum').textContent=(idx+1)+'/∞';
-  document.getElementById('answerInput').value='';
-  document.getElementById('feedback').className='feedback';
-  drawFurniture(c);
-  if(devModeActive)devRefreshState();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CHECK ANSWER — with dev code detection + game over
-// ══════════════════════════════════════════════════════════════
-function checkAnswer(){
-  const raw=document.getElementById('answerInput').value.trim();
-  // Dev code check
-  if(raw===DEV_CODE){activateDevMode();document.getElementById('answerInput').value='';return;}
-  const num=parseFloat(raw);
-  if(isNaN(num)){showFeedback(false,'Escribí un número.');return;}
-  const c=CHALLENGES[currentIdx];
-  const ok=Math.abs(num-c.answer)<=(c.tolerance||0);
-  dbLogHistory(c.level,num,ok,ok?10+c.level*5:0);
-  if(ok){
-    const pts=10+c.level*5;
-    score+=pts;
-    updateShopAndTools();
-    showFeedback(true,`Correcto. ${c.successMsg} +${pts} estrellas`);
-    dbSaveProgress();
-    setTimeout(()=>nextChallenge(),1800);
-  } else {
-    lives--;
-    document.getElementById('livesDisplay').textContent=lives>0?lives:'0';
-    showFeedback(false,`Incorrecto. Pista: ${c.hint}`);
-    dbSaveProgress();
-    if(lives<=0){setTimeout(()=>showGameOver(),1400);}
-  }
-}
-
-function showGameOver(){
-  document.getElementById('goScore').textContent=score;
-  document.getElementById('goLevel').textContent=currentIdx+1;
-  document.getElementById('gameOverScreen').style.display='flex';
-}
-function hardRestart(){
-  document.getElementById('gameOverScreen').style.display='none';
-  currentIdx=0;score=0;lives=3;purchased={ruler:false,saw:false,angle:false,calc:false};
-  CHALLENGES=[...BASE_CHALLENGES];
-  document.getElementById('livesDisplay').textContent='3';
-  updateShopAndTools();loadChallenge(0);dbSaveProgress();
-}
-function continueAfterGameOver(){
-  lives=3;document.getElementById('livesDisplay').textContent='3';
-  document.getElementById('gameOverScreen').style.display='none';
-  dbSaveProgress();
-}
-function nextChallenge(){
-  if(currentIdx===BASE_CHALLENGES.length-1){
-    document.getElementById('progressFill').style.width='100%';
-    document.getElementById('winMsg').innerHTML=`Completaste los 9 encargos originales con <strong>${score} estrellas</strong>. Los niveles infinitos continúan — ¡seguí construyendo!`;
-    document.getElementById('winScreen').style.display='flex';
-    return;
-  }
-  currentIdx++;loadChallenge(currentIdx);
-}
-function continueInfinite(){
-  document.getElementById('winScreen').style.display='none';
-  currentIdx++;ensureChallenges(currentIdx);loadChallenge(currentIdx);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DEV MODE
-// ══════════════════════════════════════════════════════════════
-function activateDevMode(){
-  devModeActive=true;
-  document.body.classList.add('dev-mode');
-  document.getElementById('devPanel').classList.add('visible');
-  document.getElementById('devBadge').classList.add('active');
-  devRefreshState();devRefreshLevelTable();devRefreshEditSelect();
-  showFeedback(true,'Modo developer activado.');
-}
-function toggleDevPanel(){
-  const p=document.getElementById('devPanel');
-  if(p.classList.contains('visible'))p.classList.remove('visible');
-  else{p.classList.add('visible');devRefreshState();devRefreshLevelTable();devRefreshEditSelect();}
-}
-function devTab(id){
-  document.querySelectorAll('.dev-tab').forEach((t,i)=>{t.classList.toggle('active',['state','levels','edit','db','export'][i]===id);});
-  document.querySelectorAll('.dev-section').forEach(s=>{s.classList.toggle('active',s.id==='dev'+id.charAt(0).toUpperCase()+id.slice(1));});
-  if(id==='levels')devRefreshLevelTable();
-  if(id==='edit')devRefreshEditSelect();
-}
-function devRefreshState(){
-  document.getElementById('devScore').value=score;
-  document.getElementById('devLives').value=lives;
-  document.getElementById('devIdx').value=currentIdx;
-  document.getElementById('devRuler').checked=purchased.ruler;
-  document.getElementById('devSaw').checked=purchased.saw;
-  document.getElementById('devAngle').checked=purchased.angle;
-  document.getElementById('devCalc').checked=purchased.calc;
-}
-function devApplyState(){
-  score=parseInt(document.getElementById('devScore').value)||0;
-  lives=parseInt(document.getElementById('devLives').value)||0;
-  const newIdx=parseInt(document.getElementById('devIdx').value)||0;
-  document.getElementById('scoreDisplay').textContent=score;
-  document.getElementById('livesDisplay').textContent=lives;
-  document.getElementById('starBalance').textContent=score;
-  if(newIdx!==currentIdx){ensureChallenges(newIdx);currentIdx=newIdx;loadChallenge(currentIdx);}
-  dbSaveProgress();
-  document.getElementById('devStateMsg').textContent='Estado aplicado.';
-}
-function devApplyTools(){
-  purchased.ruler=document.getElementById('devRuler').checked;
-  purchased.saw=document.getElementById('devSaw').checked;
-  purchased.angle=document.getElementById('devAngle').checked;
-  purchased.calc=document.getElementById('devCalc').checked;
-  updateShopAndTools();
-}
-function devGiveStars(n){score+=n;document.getElementById('devScore').value=score;document.getElementById('scoreDisplay').textContent=score;document.getElementById('starBalance').textContent=score;dbSaveProgress();}
-function devUnlockAll(){purchased={ruler:true,saw:true,angle:true,calc:true};updateShopAndTools();devRefreshState();}
-function devNextLevel(){ensureChallenges(currentIdx+1);currentIdx++;loadChallenge(currentIdx);document.getElementById('devIdx').value=currentIdx;}
-function devPrevLevel(){if(currentIdx>0){currentIdx--;loadChallenge(currentIdx);document.getElementById('devIdx').value=currentIdx;}}
-function devResetSave(){localStorage.removeItem('carpenteriaDB');localStorage.removeItem('carpenteriaStars');document.getElementById('devStateMsg').textContent='Guardado borrado. Recargá la página.';}
-
-function devRefreshLevelTable(){
-  ensureChallenges(Math.max(currentIdx+5,14));
-  const t=document.getElementById('devLevelTable');
-  t.innerHTML=`<thead><tr><th>#</th><th>Nivel</th><th>Tema</th><th>Cliente</th><th>Tipo</th><th>Respuesta</th><th>Unidad</th><th>Acción</th></tr></thead>`;
-  const tbody=document.createElement('tbody');
-  CHALLENGES.forEach((c,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${i}</td><td>${c.level}</td><td>${c.theme}</td><td>${c.client}</td><td>${c.furniture}</td><td>${c.answer}</td><td>${c.unit}</td>
-      <td><button class="dev-edit-btn" onclick="devEditLevel(${i})">Editar</button></td>`;
-    tbody.appendChild(tr);
-  });
-  t.appendChild(tbody);
-  document.getElementById('devLevelsMsg').textContent=`${CHALLENGES.length} niveles en sesión.`;
-}
-
-const DEV_FIELDS=['level','theme','client','clientIcon','order','furniture','title','question','unit','answer','tolerance','hint','successMsg'];
-const DEV_LABELS={level:'Nivel (num)',theme:'Tema',client:'Cliente',clientIcon:'Icono (1 letra)',order:'Descripción del encargo',furniture:'Tipo mueble',title:'Título pregunta',question:'Pregunta HTML',unit:'Unidad',answer:'Respuesta correcta',tolerance:'Tolerancia',hint:'Pista',successMsg:'Mensaje de éxito'};
-const FURNITURE_TYPES=['table','frame','triangle','plank','wardrobe','shelf3','diagonal','circle','garden'];
-
-function devRefreshEditSelect(){
-  ensureChallenges(Math.max(currentIdx+5,14));
-  const sel=document.getElementById('devEditSelect');
-  sel.innerHTML=CHALLENGES.map((c,i)=>`<option value="${i}" ${i===currentIdx?'selected':''}>#${i} — ${c.theme} (${c.client})</option>`).join('');
-  devLoadEditForm();
-}
-function devLoadEditForm(){
-  const idx=parseInt(document.getElementById('devEditSelect').value)||0;
-  const c=CHALLENGES[idx];
-  const form=document.getElementById('devEditForm');
-  form.innerHTML=DEV_FIELDS.map(f=>{
-    if(f==='furniture'){
-      return `<div><span class="dev-label">${DEV_LABELS[f]}</span><select class="dev-select dev-input" data-field="${f}" style="width:100%">${FURNITURE_TYPES.map(t=>`<option value="${t}" ${c[f]===t?'selected':''}>${t}</option>`).join('')}</select></div>`;
-    }
-    const isLong=['order','question','hint','successMsg'].includes(f);
-    return `<div><span class="dev-label">${DEV_LABELS[f]}</span>${isLong?`<textarea class="dev-input dev-textarea" data-field="${f}">${c[f]||''}</textarea>`:`<input class="dev-input" data-field="${f}" type="${['answer','tolerance','level'].includes(f)?'number':'text'}" value="${c[f]||''}">`}</div>`;
-  }).join('');
-  // dims editor
-  form.innerHTML+=`<div style="grid-column:1/-1"><span class="dev-label">Dimensiones (JSON)</span><input class="dev-input" id="devDimsInput" value='${JSON.stringify(c.dims||{})}'></div>`;
-  form.innerHTML+=`<div style="grid-column:1/-1"><span class="dev-label">Fórmulas (una por línea)</span><textarea class="dev-input dev-textarea" id="devFormulasInput" style="min-height:50px">${(c.formulas||[]).join('\n')}</textarea></div>`;
-}
-function devEditLevel(idx){
-  document.getElementById('devEditSelect').value=idx;
-  devLoadEditForm();
-  devTab('edit');
-}
-function devSaveEdit(){
-  const idx=parseInt(document.getElementById('devEditSelect').value)||0;
-  const c=CHALLENGES[idx];
-  document.querySelectorAll('#devEditForm [data-field]').forEach(el=>{
-    const f=el.dataset.field;
-    if(['answer','tolerance','level'].includes(f))c[f]=parseFloat(el.value)||0;
-    else c[f]=el.value;
-  });
-  // dims
-  try{c.dims=JSON.parse(document.getElementById('devDimsInput').value);}catch(e){}
-  // formulas
-  c.formulas=document.getElementById('devFormulasInput').value.split('\n').filter(Boolean);
-  CHALLENGES[idx]=c;
-  // persist to DB
-  if(db){
-    db.run(`INSERT OR REPLACE INTO levels(id,level_num,theme,client,furniture,answer,unit,hint,created_at) VALUES(${idx+1},?,?,?,?,?,?,?,datetime('now'));`,
-      [c.level,c.theme,c.client,c.furniture,c.answer,c.unit,c.hint]);
-    saveDB();
-  }
-  if(idx===currentIdx)loadChallenge(currentIdx);
-  devRefreshLevelTable();devRefreshEditSelect();
-  document.getElementById('devEditMsg').textContent=`Nivel #${idx} guardado.`;
-}
-function devDeleteLevel(){
-  const idx=parseInt(document.getElementById('devEditSelect').value)||0;
-  if(idx<BASE_CHALLENGES.length){document.getElementById('devEditMsg').textContent='No se pueden eliminar los 9 niveles base.';return;}
-  CHALLENGES.splice(idx,1);
-  if(currentIdx>=CHALLENGES.length)currentIdx=CHALLENGES.length-1;
-  devRefreshLevelTable();devRefreshEditSelect();loadChallenge(currentIdx);
-  document.getElementById('devEditMsg').textContent=`Nivel eliminado.`;
-}
-function devAddLevel(){
-  const newC=generateChallenge(CHALLENGES.length+1);
-  CHALLENGES.push(newC);
-  devRefreshLevelTable();devRefreshEditSelect();
-  document.getElementById('devLevelsMsg').textContent=`Nivel #${CHALLENGES.length-1} agregado.`;
-}
-
-// SQL CONSOLE
-function devRunSql(){
-  if(!db){document.getElementById('devSqlResult').textContent='DB no inicializada.';return;}
-  const sql=document.getElementById('devSqlInput').value;
-  try{
-    const results=db.exec(sql);
-    saveDB();
-    if(!results.length){document.getElementById('devSqlResult').textContent='OK — sin resultados (INSERT/UPDATE/DELETE).';return;}
-    let out='';
-    results.forEach(r=>{
-      out+=r.columns.join(' | ')+'\n'+r.columns.map(()=>'—').join('—|—')+'\n';
-      r.values.forEach(row=>out+=row.join(' | ')+'\n');
-    });
-    document.getElementById('devSqlResult').textContent=out;
-  }catch(e){document.getElementById('devSqlResult').textContent='ERROR: '+e.message;}
-}
-function devResetDb(){
-  localStorage.removeItem('carpenteriaDB');
-  document.getElementById('devSqlResult').textContent='DB reseteada. Recargá para reiniciar.';
-}
-
-// EXPORT CODE
-function devExportCode(){
-  // Get current challenges as JSON to embed
-  const challengesJSON=JSON.stringify(CHALLENGES,null,2);
-  // Rewrite the BASE_CHALLENGES line in the current source
-  const source=document.documentElement.outerHTML;
-  const exportedSource=source.replace(
-    /let CHALLENGES = \[\.\.\.BASE_CHALLENGES\];/,
-    `// Exported ${new Date().toISOString()}\nlet CHALLENGES = ${challengesJSON};`
-  ).replace(
-    /const BASE_CHALLENGES = \[[\s\S]*?\];/,
-    '// BASE_CHALLENGES merged into CHALLENGES above'
-  );
-  const blob=new Blob([exportedSource],{type:'text/html'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carpinteria_export.html';a.click();
-  document.getElementById('devExportMsg').textContent='Descargando carpinteria_export.html...';
-}
-
-// ══════════════════════════════════════════════════════════════
-//  START / RESTART
-// ══════════════════════════════════════════════════════════════
-async function startGame(){
-  document.getElementById('introScreen').style.display='none';
-  // Try to restore from DB
-  const saved=dbLoadProgress();
-  if(saved){
-    score=saved.score||0;
-    lives=saved.lives||3;
-    currentIdx=saved.current_level||0;
-    try{purchased={...purchased,...JSON.parse(saved.purchased||'{}')};}catch(e){}
-  }
-  // Increment session count
-  if(db)db.run("UPDATE progress SET sessions=sessions+1,updated_at=datetime('now') WHERE id=1;");
-  ensureChallenges(currentIdx+5);
-  updateShopAndTools();
-  loadChallenge(currentIdx);
-  dbSaveProgress();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CANVAS POLYFILL
-// ══════════════════════════════════════════════════════════════
-if(!CanvasRenderingContext2D.prototype.roundRect){
-  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
-    if(w<2*r)r=w/2;if(h<2*r)r=h/2;
-    this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);
-    this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-    this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);
-    this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);return this;
-  };
-}
-
-// ══════════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════════
-window.startGame=startGame;
-window.checkAnswer=checkAnswer;
-window.hardRestart=hardRestart;
-window.continueAfterGameOver=continueAfterGameOver;
-window.continueInfinite=continueInfinite;
-window.toggleDevPanel=toggleDevPanel;
-window.devTab=devTab;
-window.devApplyState=devApplyState;
-window.devApplyTools=devApplyTools;
-window.devGiveStars=devGiveStars;
-window.devUnlockAll=devUnlockAll;
-window.devNextLevel=devNextLevel;
-window.devPrevLevel=devPrevLevel;
-window.devResetSave=devResetSave;
-window.devRunSql=devRunSql;
-window.devResetDb=devResetDb;
-window.devLoadEditForm=devLoadEditForm;
-window.devSaveEdit=devSaveEdit;
-window.devDeleteLevel=devDeleteLevel;
-window.devAddLevel=devAddLevel;
-window.devEditLevel=devEditLevel;
-window.devExportCode=devExportCode;
-window.calcInput=calcInput;window.calcEquals=calcEquals;window.calcSqrt=calcSqrt;
-window.calcClear=calcClear;window.calcBack=calcBack;window.closeTool=closeTool;window.calcHyp=calcHyp;
-window.handleTool=handleTool;
-
-// Init SQL then show intro
-initDB().then(()=>{
-  console.log('[Carpintería] DB lista. Código dev: /2983&');
-}).catch(e=>{
-  console.warn('[Carpintería] SQL.js no cargó, funcionando sin DB.',e);
-  db=null;
-});
-</script>
-</body>
-</html>
+      <div class="
