@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Carpintería de Veñita</title>
+<title>La Carpintería de Beñita</title>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
@@ -354,9 +354,9 @@ body.dev-mode{border-top:3px solid var(--dev-accent);}
 <div class="fullscreen-overlay" id="introScreen">
   <div class="intro-card">
     <div class="intro-icon">&#9998;</div>
-    <h1>La Carpintería de <em>Veñita</em></h1>
+    <h1>La Carpintería de <em>Beñita</em></h1>
     <span class="intro-sup">Taller de geometría &amp; madera</span>
-    <p>Ayudá a Veña a construir muebles usando <strong>matemáticas reales</strong>. Los niveles son infinitos y aleatorios. Comprá herramientas con estrellas para resolver los encargos más rápido. <strong>Cuidado:</strong> si perdés todas las vidas, el juego termina.</p>
+    <p>Ayudá a Benia a construir muebles usando <strong>matemáticas reales</strong>. Los niveles son infinitos y aleatorios. Comprá herramientas con estrellas para resolver los encargos más rápido. <strong>Cuidado:</strong> si perdés todas las vidas, el juego termina.</p>
     <button class="btn-start" onclick="startGame()">Empezar a construir</button>
   </div>
 </div>
@@ -379,7 +379,7 @@ body.dev-mode{border-top:3px solid var(--dev-accent);}
   <div class="intro-card">
     <div class="intro-icon">&#9733;</div>
     <h1><em>Maestría</em> lograda</h1>
-    <span class="intro-sup">La Carpintería de Veñita</span>
+    <span class="intro-sup">La Carpintería de Beñita</span>
     <p id="winMsg"></p>
     <button class="btn-start" onclick="continueInfinite()">Seguir con más encargos</button>
   </div>
@@ -523,7 +523,7 @@ body.dev-mode{border-top:3px solid var(--dev-accent);}
     <div class="logo-mark">&#9998;</div>
     <div class="masthead-title">
       <div class="masthead-sup">Taller artesanal · matemáticas</div>
-      <div class="masthead-name">La Carpintería de <em>Veñita</em></div>
+      <div class="masthead-name">La Carpintería de <em>Beñita</em></div>
     </div>
   </div>
   <div class="masthead-right">
@@ -1165,7 +1165,7 @@ function nextChallenge(){
   // Check for "win" after all 9 base levels
   if(currentIdx===9){
     soundNextLevel();
-    document.getElementById('winMsg').textContent=`¡Completaste los 9 encargos de Veña con ${score} estrellas! Ahora los encargos son infinitos.`;
+    document.getElementById('winMsg').textContent=`¡Completaste los 9 encargos de Benia con ${score} estrellas! Ahora los encargos son infinitos.`;
     document.getElementById('winScreen').style.display='flex';
     return;
   }
@@ -1316,7 +1316,7 @@ function devRunSql(){
 function devResetDb(){if(db){db.run("DELETE FROM history;");db.run("UPDATE progress SET score=0,current_level=0,lives=3,purchased='{}' WHERE id=1;");saveDB();document.getElementById('devSqlResult').textContent='DB reseteada.';}}
 function devExportCode(){
   const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carpinteria_veñita_export.html';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carpinteria_beñita_export.html';a.click();
   document.getElementById('devExportMsg').textContent='Descarga iniciada.';
 }
 
