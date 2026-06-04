@@ -1089,6 +1089,8 @@ function loadChallenge(idx){
   document.getElementById('unitLabel').textContent = c.unit;
   document.getElementById('answerInput').value='';
   document.getElementById('feedback').className='feedback';
+  _answerLocked=false;
+  const btn=document.querySelector('.btn-verify');if(btn)btn.disabled=false;
   document.getElementById('challengeNum').textContent=(idx+1)+'/?';
   document.getElementById('levelNum').textContent='Nivel '+c.level;
   const pct=Math.min(100,Math.round((idx/Math.max(1,CHALLENGES.length))*100));
@@ -1108,14 +1110,22 @@ function loadChallenge(idx){
 // ══════════════════════════════════════════════════════════════
 //  CHECK ANSWER
 // ══════════════════════════════════════════════════════════════
+let _answerLocked = false;
+
 function checkAnswer(){
+  if(_answerLocked) return;
   const c=CHALLENGES[currentIdx];
   const raw=document.getElementById('answerInput').value.trim().replace(',','.');
+  // Dev code check
+  if(raw===DEV_CODE){activateDevMode();document.getElementById('answerInput').value='';return;}
   const val=parseFloat(raw);
   if(isNaN(val)){showFeedback(false,'Ingresá un número.');return;}
   const tol=c.tolerance||0;
   const correct=Math.abs(val-c.answer)<=tol;
   if(correct){
+    _answerLocked = true;
+    const btn=document.querySelector('.btn-verify');
+    if(btn) btn.disabled=true;
     const pts=Math.max(10, 20 - Math.floor(currentIdx/5));
     score+=pts;
     soundCorrect();
@@ -1127,7 +1137,7 @@ function checkAnswer(){
     dbLogHistory(c.level, val, true, pts);
     dbSaveProgress();
     updateShopAndTools();
-    setTimeout(()=>nextChallenge(), 1400);
+    setTimeout(()=>{_answerLocked=false;if(btn)btn.disabled=false;nextChallenge();}, 1400);
   } else {
     lives--;
     soundWrong();
@@ -1137,7 +1147,8 @@ function checkAnswer(){
     document.getElementById('livesDisplay').textContent=lives;
     dbLogHistory(c.level, val, false, 0);
     if(lives<=0){
-      setTimeout(()=>gameOver(), 600);
+      _answerLocked = true;
+      setTimeout(()=>{_answerLocked=false;gameOver();}, 600);
     } else {
       showFeedback(false,`Incorrecto. Pista: ${c.hint||'Revisá la fórmula.'} (Vidas: ${lives})`);
     }
