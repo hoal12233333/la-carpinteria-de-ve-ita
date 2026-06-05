@@ -954,7 +954,7 @@ function attemptBuyLife(){
     showFeedback(true,`¡Vida comprada! Vidas: ${lives}`);
   } else {showFeedback(false,`Necesitás 200 estrellas para comprar una vida.`);}
 }
-  if(purchased[tool])return;
+function attemptBuy(tool){
   if(score>=prices[tool]){
     score-=prices[tool];purchased[tool]=true;
     updateShopAndTools();
